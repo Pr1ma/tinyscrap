@@ -1,0 +1,33 @@
+{
+  "name": "tinyscrap",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "jsdom": "^11.8.0",
+    "node-fetch": "^2.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "nodemon": "^1.17.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pr1ma/tinyscrap.git"
+  },
+  "author": "Pr1ma",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Pr1ma/tinyscrap/issues"
+  },
+  "homepage": "https://github.com/Pr1ma/tinyscrap#readme",
+  "nodemonConfig": {
+    "ignore": ["test/*", "docs/*", "nodemodules/*"],
+    "delay": "2500"
+  }
+}
