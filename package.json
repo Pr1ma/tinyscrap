@@ -4,9 +4,17 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "body-parser": "^1.18.2",
+    "cheerio": "^1.0.0-rc.2",
     "express": "^4.16.3",
+    "iconv-lite": "^0.4.21",
     "jsdom": "^11.8.0",
-    "node-fetch": "^2.1.2"
+    "needle": "^2.2.0",
+    "node-fetch": "^2.1.2",
+    "puppeteer": "^1.3.0",
+    "resolve": "^1.7.1",
+    "scrape-it": "^5.0.3",
+    "tress": "^1.0.5"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
@@ -27,7 +35,11 @@
   },
   "homepage": "https://github.com/Pr1ma/tinyscrap#readme",
   "nodemonConfig": {
-    "ignore": ["test/*", "docs/*", "nodemodules/*"],
+    "ignore": [
+      "test/*",
+      "docs/*",
+      "node_modules/*"
+    ],
     "delay": "2500"
   }
 }
