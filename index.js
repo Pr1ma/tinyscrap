@@ -1,42 +1,49 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
-const fs = require('fs');
+const helmet = require('helmet');
+const fetch = require('isomorphic-unfetch');
+// const platformTranslate = require('./platformTranslate.js');
 
-const URL = 'https://gamebuy.ru';
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
 const ymStart = 'https://market.yandex.ru/product/';
 const ymEnd = '/offers?local-offers-first=1&how=aprice';
 
-const screenshot = 'amazon_nyan_cat_pullover.png';
+// function today(date) {
+//   var day = date.getDate();
+//   var month = date.getMonth() + 1;
+//   var year = date.getFullYear();
+
+//   return day + '/' + month + '/' + year;
+// }
+
+// function tomorrow(date) {
+//   var day = date.getDate() + 1;
+//   var month = date.getMonth() + 1;
+//   var year = date.getFullYear();
+
+//   return day + '/' + month + '/' + year;
+// }
+
+// const id = 'Valute ID="R01035"'
+
+// const poundValue = () => {
+//   fetch(`http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow}`).then(response => )
+// }
 
 const app = express();
 
-app.disable('x-powered-by');
+app.use(helmet());
 
-app.get('/test', (req, res) => {
-  (async () => {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(ymStart + '1886948783' + ymEnd);
+// app.disable('x-powered-by');
 
-    const goods = await page.evaluate(() => {
-      const anchors = Array.from(document.querySelectorAll('.price'));
-      const titles = Object.from(
-        document.querySelectorAll('.n-snippet-card2__header')
-      );
-
-      return titles.map(el => el.textContent).slice(0);
-      //return anchors.map(el => el.textContent).slice(0)
-    });
-
-    console.log(goods);
-    await browser.close();
-    // res.send(goods);
-  })();
+//Работаем с yandex.market
+app.get('/ym/:id', (req, res) => {
+  res.send(req.params.id);
 });
 
+//Работаем с amazon.co.uk
 app.get('/amazon/:id', (req, res) => {
   try {
     (async () => {
@@ -73,37 +80,95 @@ app.get('/amazon/:id', (req, res) => {
   }
 });
 
-app.get('/gcu/:id', (req, res) => {
+//Работаем с games.co.uk
+app.get('/gcu/:id', async (req, res) => {
   try {
     (async () => {
       const browser = await puppeteer.launch();
       const page = await browser.newPage();
+
+      // await page.tracing.start({
+      //   path: 'trace.json',
+      //   categories: ['devtools.timeline']
+      // });
+
       await page.setViewport({ width: 1280, height: 800 });
       await page.goto(
         'https://tradein.game.co.uk/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices'
       );
       await page.waitForSelector('#searchTab');
       await page.click('a[href="#searchSoftware"]');
-      await page.type('#SoftwareKeyword', req.params.id);
+      await page.type('#SoftwareKeyword', req.params.id, {
+        delay: Math.floor(Math.random() * 100) + 50
+      });
+
+      //(node:26098) UnhandledPromiseRejectionWarning: Error: Protocol error (Runtime.callFunctionOn): Cannot find context with specified id undefined
+      // await page.keyboard.press('Enter', { delay: 50 });
+
       await page.click('#SoftwareSearch.btn.btn-primary.btn-lg');
       await page.waitForSelector('.cushion');
+      // await page.screenshot({ path: 'gcu_before.png' });
 
-      const data = await page.$$eval('div.row.cushion', divs => divs.length);
+      await page.addScriptTag({ path: './platformTranslate.js' });
 
-      // const data = await page.evaluate(() => {
-      //   const itemCards = Array.from(document.querySelectorAll('.row.cushion'));
-      //     const item = itemCards.map(el => {
-      //       const platform = el.
-      //     })
-      //   return itemCards;
+      const responseToReq = await page.evaluate(() => {
+        let result = [];
+
+        const hz = document
+          .querySelectorAll('div.row.row-border')
+          .forEach(el => {
+            if (el.hasChildNodes()) {
+              const title = el.querySelector('div.prod-title').textContent;
+              const credit = el.querySelector('span.credit-price-field')
+                .textContent;
+              const cash = el.querySelector('span.price-field').textContent;
+              const platform = el
+                .querySelector('#platformImage')
+                .getAttribute('alt');
+              const image = el
+                .querySelector('div.col-xs-6.col-md-4')
+                .firstElementChild.getAttribute('src');
+              const id = 'unknown';
+              result.push({
+                id: id || 'unknown',
+                title: title + ' ' + platformTranslate(platform) || 'unknown',
+                price: credit || 'unknown',
+                priceForCash: cash || 'unknown',
+                cover: image || 'unknown'
+              });
+            }
+          });
+
+        return result;
+      });
+
+      // const elems = await page.evaluate(() => {
+      //   const secondList = document
+      //     .querySelectorAll('div.row.cushion')
+      //     .forEach(el => el.nodeName);
+      //   return secondList;
       // });
-      await page.screenshot({ path: 'gcu.png' });
+
+      // await page.tracing.stop();
+
       await browser.close();
-      console.log('DONE', data);
+      res.json(responseToReq);
+      console.log(
+        'DONE ------------------>\n',
+        responseToReq,
+        `\n------------------>typeof: ${typeof responseToReq}`
+      );
     })();
   } catch (err) {
-    console.error(err);
+    console.log(err);
   }
+});
+
+app.get('/favicon.ico', (req, res) => res.status(204));
+
+app.use('*', (req, res) => {
+  res.status(403);
+  res.send('NOTHING THERE TO WATCH');
 });
 
 app.listen(PORT, HOST, () => console.log(`TinyScrap start at ${HOST}:${PORT}`));
