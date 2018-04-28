@@ -1,29 +1,45 @@
-// function today(date) {
-//   var day = date.getDate();
-//   var month = date.getMonth() + 1;
-//   var year = date.getFullYear();
+const http = require('http');
+const parseString = require('xml2js').parseString;
 
-//   return day + '/' + month + '/' + year;
-// }
+const tomorrow = date => {
+  let dd = date.getDate() + 1; //We need tomorrow
+  let mm = date.getMonth() + 1; //Month starts at 0!
+  let yyyy = date.getFullYear();
 
-function tomorrow(date) {
-  var day = date.getDate() + 1;
-  var month = date.getMonth() + 1;
-  var year = date.getFullYear();
+  if (dd < 10) {
+    dd = '0' + dd;
+  }
 
-  return day + '/' + month + '/' + year;
+  if (mm < 10) {
+    mm = '0' + mm;
+  }
+
+  return dd + '/' + mm + '/' + yyyy;
+};
+
+function getRate(callback) {
+  http.get(
+    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`,
+    res => {
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res
+        .on('end', () => {
+          parseString(data, (err, res2) => {
+            let a = parseFloat(
+              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
+            );
+            // console.log(a);
+            callback(a);
+          });
+        })
+        .on('error', err => {
+          console.log('Error: ', err);
+        });
+    }
+  );
 }
 
-// console.log(today(new Date()));
-// console.log(tomorrow(new Date()));
-
-const fetch = require('node-fetch');
-
-// console.log(
-//   `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`
-// );
-
-fetch(`http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow}`)
-  .then(response => response.json())
-  .then(body => console.log(body))
-  .catch(error => console.log(error));
+getRate(rate => console.log('From Outside', rate));

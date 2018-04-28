@@ -1,7 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const helmet = require('helmet');
-const fetch = require('isomorphic-unfetch');
 // const platformTranslate = require('./platformTranslate.js');
 
 const HOST = process.env.HOST || '0.0.0.0';
@@ -9,28 +8,6 @@ const PORT = process.env.PORT || 8080;
 
 const ymStart = 'https://market.yandex.ru/product/';
 const ymEnd = '/offers?local-offers-first=1&how=aprice';
-
-// function today(date) {
-//   var day = date.getDate();
-//   var month = date.getMonth() + 1;
-//   var year = date.getFullYear();
-
-//   return day + '/' + month + '/' + year;
-// }
-
-// function tomorrow(date) {
-//   var day = date.getDate() + 1;
-//   var month = date.getMonth() + 1;
-//   var year = date.getFullYear();
-
-//   return day + '/' + month + '/' + year;
-// }
-
-// const id = 'Valute ID="R01035"'
-
-// const poundValue = () => {
-//   fetch(`http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow}`).then(response => )
-// }
 
 const app = express();
 
@@ -86,12 +63,6 @@ app.get('/gcu/:id', async (req, res) => {
     (async () => {
       const browser = await puppeteer.launch();
       const page = await browser.newPage();
-
-      // await page.tracing.start({
-      //   path: 'trace.json',
-      //   categories: ['devtools.timeline']
-      // });
-
       await page.setViewport({ width: 1280, height: 800 });
       await page.goto(
         'https://tradein.game.co.uk/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices'
@@ -141,16 +112,6 @@ app.get('/gcu/:id', async (req, res) => {
 
         return result;
       });
-
-      // const elems = await page.evaluate(() => {
-      //   const secondList = document
-      //     .querySelectorAll('div.row.cushion')
-      //     .forEach(el => el.nodeName);
-      //   return secondList;
-      // });
-
-      // await page.tracing.stop();
-
       await browser.close();
       res.json(responseToReq);
       console.log(
