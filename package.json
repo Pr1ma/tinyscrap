@@ -23,7 +23,7 @@
     "build": "webpack"
   },
   "engines": {
-    "node": ">=8.9.1"
+    "node": ">=8.0.0"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,6 @@
   "bugs": {
     "url": "https://github.com/Pr1ma/tinyscrap/issues"
   },
-  "homepage": "https://github.com/Pr1ma/tinyscrap#readme",
   "nodemonConfig": {
     "ignore": ["test/*", "docs/*", "node_modules/*", "dist/*", ".vscode/*"],
     "delay": "2500"
