@@ -7,3 +7,9 @@ node_js:
 branches:
   only:
     - master
+
+deploy:
+  provider: heroku
+  app: "tinyscrap"
+  api_key:
+    secure: "0003baca-4f5a-4c62-a81b-4c1711e9d6b5"
