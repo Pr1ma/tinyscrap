@@ -1,14 +1,62 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const helmet = require('helmet');
-// const platformTranslate = require('./platformTranslate.js');
+const http = require('http');
+const parseString = require('xml2js').parseString;
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
+const tomorrow = date => {
+  let dd = date.getDate() + 1; //We need tomorrow
+  let mm = date.getMonth() + 1; //Month starts at 0!
+  let yyyy = date.getFullYear();
+  if (dd < 10) {
+    dd = '0' + dd;
+  }
+  if (mm < 10) {
+    mm = '0' + mm;
+  }
+  return dd + '/' + mm + '/' + yyyy;
+};
+
+let exchangeRate;
+
+function getRate(callback) {
+  http.get(
+    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`,
+    res => {
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res
+        .on('end', () => {
+          parseString(data, (err, res2) => {
+            let rate = parseFloat(
+              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
+            );
+            // console.log(a);
+            callback(rate);
+          });
+        })
+        .on('error', err => {
+          console.log('Error: ', err);
+        });
+    }
+  );
+}
+
+getRate(rate => (exchangeRate = rate));
+
+setInterval(function getRate(rate) {
+  return (exchangeRate = rate);
+}, 86400000);
+
+/*
 const ymStart = 'https://market.yandex.ru/product/';
 const ymEnd = '/offers?local-offers-first=1&how=aprice';
-
+*/
 const app = express();
 
 app.use(helmet());
@@ -16,11 +64,14 @@ app.use(helmet());
 // app.disable('x-powered-by');
 
 //Работаем с yandex.market
+/*
 app.get('/ym/:id', (req, res) => {
   res.send(req.params.id);
 });
+*/
 
 //Работаем с amazon.co.uk
+/*
 app.get('/amazon/:id', (req, res) => {
   try {
     (async () => {
@@ -56,6 +107,7 @@ app.get('/amazon/:id', (req, res) => {
     console.error(err);
   }
 });
+*/
 
 //Работаем с games.co.uk
 app.get('/gcu/:id', async (req, res) => {
@@ -80,56 +132,80 @@ app.get('/gcu/:id', async (req, res) => {
       await page.waitForSelector('.cushion');
       // await page.screenshot({ path: 'gcu_before.png' });
 
-      await page.addScriptTag({ path: './platformTranslate.js' });
+      await page.addScriptTag({
+        content: `function platformToString(input) {
+        if (typeof input !== 'string') return 'input must be a string';
+        let output;
+        switch (input) {
+        case 'XB2':
+          output = 'Xbox 360';
+          break;
+        case 'XB3':
+          output = 'Xbox One';
+          break;
+        case 'WIU':
+          output = 'Wii U';
+          break;
+        case 'WII':
+          output = 'Wii';
+          break;
+        case 'NSW':
+          output = 'NSwitch';
+          break;
+        default:
+          output = input;
+        }
+        return output;
+      };
+      `
+      });
+      await page.addScriptTag({ content: `let exchangeRate=${exchangeRate}` });
 
       const responseToReq = await page.evaluate(() => {
         let result = [];
 
-        const hz = document
-          .querySelectorAll('div.row.row-border')
-          .forEach(el => {
-            if (el.hasChildNodes()) {
-              const title = el.querySelector('div.prod-title').textContent;
-              const credit = el.querySelector('span.credit-price-field')
-                .textContent;
-              const cash = el.querySelector('span.price-field').textContent;
-              const platform = el
-                .querySelector('#platformImage')
-                .getAttribute('alt');
-              const image = el
-                .querySelector('div.col-xs-6.col-md-4')
-                .firstElementChild.getAttribute('src');
-              const id = 'unknown';
-              result.push({
-                id: id || 'unknown',
-                title: title + ' ' + platformTranslate(platform) || 'unknown',
-                price: credit || 'unknown',
-                priceForCash: cash || 'unknown',
-                cover: image || 'unknown'
-              });
-            }
-          });
+        document.querySelectorAll('div.row.row-border').forEach(el => {
+          if (el.hasChildNodes()) {
+            const title = el.querySelector('div.prod-title').textContent;
+            const credit = el.querySelector('span.credit-price-field')
+              .textContent;
+            const cash = el.querySelector('span.price-field').textContent;
+            const platform = el
+              .querySelector('#platformImage')
+              .getAttribute('alt');
+            const image = el
+              .querySelector('div.col-xs-6.col-md-4')
+              .firstElementChild.getAttribute('src');
+            const id = 'unknown';
+            result.push({
+              id: id || 'unknown',
+              title: title + ' ' + platformToString(platform) || 'unknown',
+              price:
+                Math.round(credit.replace('£', '') * exchangeRate / 50) * 50 ||
+                'unknown',
+              priceForCash:
+                Math.round(cash.replace('£', '') * exchangeRate / 50) * 50 ||
+                'unknown',
+              cover: image || 'unknown'
+            });
+          }
+        });
 
         return result;
       });
       await browser.close();
-      res.json(responseToReq);
-      console.log(
-        'DONE ------------------>\n',
-        responseToReq,
-        `\n------------------>typeof: ${typeof responseToReq}`
-      );
+      console.log(responseToReq, exchangeRate, typeof exchangeRate);
+      res.status(200).json(responseToReq);
     })();
   } catch (err) {
     console.log(err);
   }
 });
 
-app.get('/favicon.ico', (req, res) => res.status(204));
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.use('*', (req, res) => {
-  res.status(403);
-  res.send('NOTHING THERE TO WATCH');
+  res.status(403).end();
 });
 
 app.listen(PORT, HOST, () => console.log(`TinyScrap start at ${HOST}:${PORT}`));
