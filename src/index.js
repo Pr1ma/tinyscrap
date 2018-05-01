@@ -41,7 +41,7 @@ function getRate(callback) {
           });
         })
         .on('error', err => {
-          console.log('Error: ', err);
+          throw err;
         });
     }
   );
@@ -163,8 +163,9 @@ app.get('/gcu/:id', async (req, res) => {
 
       const responseToReq = await page.evaluate(() => {
         let result = [];
-
+        /* eslint-disable */
         document.querySelectorAll('div.row.row-border').forEach(el => {
+          /* eslint-enable */
           if (el.hasChildNodes()) {
             const title = el.querySelector('div.prod-title').textContent;
             const credit = el.querySelector('span.credit-price-field')
@@ -179,7 +180,9 @@ app.get('/gcu/:id', async (req, res) => {
             const id = 'unknown';
             result.push({
               id: id || 'unknown',
+              /* eslint-disable */
               title: title + ' ' + platformToString(platform) || 'unknown',
+              /* eslint-enable */
               price:
                 Math.round(credit.replace('£', '') * exchangeRate / 50) * 50 ||
                 'unknown',
@@ -194,11 +197,10 @@ app.get('/gcu/:id', async (req, res) => {
         return result;
       });
       await browser.close();
-      console.log(responseToReq, exchangeRate, typeof exchangeRate);
       res.status(200).json(responseToReq);
     })();
   } catch (err) {
-    console.log(err);
+    throw err;
   }
 });
 
@@ -208,4 +210,4 @@ app.use('*', (req, res) => {
   res.status(403).end();
 });
 
-app.listen(PORT, HOST, () => console.log(`TinyScrap start at ${HOST}:${PORT}`));
+app.listen(PORT, HOST);
