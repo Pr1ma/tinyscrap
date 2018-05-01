@@ -19,11 +19,11 @@
   "scripts": {
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/index.js",
+    "dev": "nodemon index.js",
     "build": "webpack"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=9.11.1"
   },
   "repository": {
     "type": "git",
