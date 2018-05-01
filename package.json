@@ -1,7 +1,7 @@
 {
   "name": "tinyscrap",
-  "version": "0.1.3",
-  "description": "Scrapping server in sailover",
+  "version": "0.2.0",
+  "description": "Homeless scrapping server",
   "private": true,
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon ./src/index.js",
-    "build": "npm run build"
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/Pr1ma/tinyscrap#readme",
   "nodemonConfig": {
-    "ignore": ["test/*", "docs/*", "node_modules/*"],
+    "ignore": ["test/*", "docs/*", "node_modules/*", "dist/*", ".vscode/*"],
     "delay": "2500"
   }
 }

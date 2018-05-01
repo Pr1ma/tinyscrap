@@ -1,1 +1,3 @@
 # tinyscrap
+
+Homeless server
