@@ -23,7 +23,7 @@
     "build": "webpack"
   },
   "engines": {
-    "node": ">=9.11.1"
+    "node": ">=8.9.1"
   },
   "repository": {
     "type": "git",
