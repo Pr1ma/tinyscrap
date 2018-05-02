@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const puppeteer = require('puppeteer');
 const helmet = require('helmet');
 const http = require('http');
@@ -60,7 +61,7 @@ const ymEnd = '/offers?local-offers-first=1&how=aprice';
 const app = express();
 
 app.use(helmet());
-
+app.use(cors());
 // app.disable('x-powered-by');
 
 //Работаем с yandex.market
@@ -110,7 +111,7 @@ app.get('/amazon/:id', (req, res) => {
 */
 
 //Работаем с games.co.uk
-app.get('/gcu/:id', async (req, res) => {
+app.get('/gcu/:id', cors(), async (req, res) => {
   try {
     (async () => {
       const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
