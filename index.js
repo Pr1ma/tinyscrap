@@ -5,7 +5,7 @@ const FormData = require('form-data');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const http = require('http');
-const https = require('https');
+// const https = require('https');
 const parseString = require('xml2js').parseString;
 
 const HOST = process.env.HOST || '0.0.0.0';
@@ -24,14 +24,6 @@ let tomorrow = date => {
     mm = '0' + mm;
   }
   return dd + '/' + mm + '/' + yyyy;
-};
-
-const exchangeRate = 86.4616;
-
-const rusPrice = price => {
-  // if (price typeof !== 'string')
-  const result = Math.round(price.replace('£', '') * exchangeRate / 50) * 50;
-  return result;
 };
 
 function platformTranslate(input) {
@@ -59,41 +51,46 @@ function platformTranslate(input) {
   return output;
 }
 
-// let exchangeRate;
+let exchangeRate;
 
-// function getRate(callback) {
-//   http.get(
-//     `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`,
-//     res => {
-//       let data = '';
-//       res.on('data', chunk => {
-//         data += chunk;
-//       });
-//       res
-//         .on('end', () => {
-//           parseString(data, (err, res2) => {
-//             let rate = parseFloat(
-//               res2.ValCurs.Valute[2].Value[0].replace(',', '.')
-//             );
-//             // console.log(a);
-//             callback(rate);
-//           });
-//         })
-//         .on('error', err => {
-//           throw err;
-//         });
-//     }
-//   );
-// }
+function getRate(callback) {
+  http.get(
+    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`,
+    res => {
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res
+        .on('end', () => {
+          parseString(data, (err, res2) => {
+            let rate = parseFloat(
+              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
+            );
+            // console.log(a);
+            callback(rate);
+          });
+        })
+        .on('error', err => {
+          throw err;
+        });
+    }
+  );
+}
 
-// getRate(rate => {
-//   console.log(`Tomorrow(${tomorrow(new Date())}) 1 GBP for ${rate} roubles`);
-//   return (exchangeRate = rate);
-// });
+getRate(rate => {
+  return (exchangeRate = rate);
+});
 
-// setInterval(function getRate(rate) {
-//   return (exchangeRate = rate);
-// }, 86400000);
+setInterval(function getRate(rate) {
+  return (exchangeRate = rate);
+}, 86400000);
+
+const rusPrice = price => {
+  // if (price typeof !== 'string')
+  const result = Math.round(price.replace('£', '') * exchangeRate / 50) * 50;
+  return result;
+};
 
 const app = express();
 
@@ -101,7 +98,6 @@ app.use(helmet());
 // app.use(cors());
 
 app.get('/gcu/:id', (req, res) => {
-  console.log(req.params.id);
   form.append('TechKeyword', '');
   form.append('SoftwareKeyword', `${req.params.id}`);
   form.append('button', 'Search');
@@ -115,9 +111,6 @@ app.get('/gcu/:id', (req, res) => {
       {
         method: 'POST',
         body: form
-        // headers: {
-        //   'Content-Type': 'application/x-www-form-urlencoded'
-        // }
       }
     );
     const data = await response.text();
@@ -154,7 +147,6 @@ app.get('/gcu/:id', (req, res) => {
           .attr('src')
       });
     });
-    console.log(result);
     res.status(200).json(result);
   })();
 });
@@ -165,4 +157,4 @@ app.use('*', (req, res) => {
   res.status(403).end();
 });
 
-app.listen(PORT, HOST, console.log('Started'));
+app.listen(PORT, HOST);
