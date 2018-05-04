@@ -1,5 +1,5 @@
 const express = require('express');
-// const cors = require('cors');
+const cors = require('cors');
 const helmet = require('helmet');
 const FormData = require('form-data');
 const fetch = require('node-fetch');
@@ -14,8 +14,8 @@ const PORT = process.env.PORT || 8080;
 let form = new FormData();
 
 let tomorrow = date => {
-  let dd = date.getDate() + 1; //We need tomorrow
-  let mm = date.getMonth() + 1; //Month starts at 0!
+  let dd = date.getDate() + 1;
+  let mm = date.getMonth() + 1;
   let yyyy = date.getFullYear();
   if (dd < 10) {
     dd = '0' + dd;
@@ -67,7 +67,6 @@ function getRate(callback) {
             let rate = parseFloat(
               res2.ValCurs.Valute[2].Value[0].replace(',', '.')
             );
-            // console.log(a);
             callback(rate);
           });
         })
@@ -87,7 +86,6 @@ setInterval(function getRate(rate) {
 }, 86400000);
 
 const rusPrice = price => {
-  // if (price typeof !== 'string')
   const result = Math.round(price.replace('£', '') * exchangeRate / 50) * 50;
   return result;
 };
@@ -95,7 +93,7 @@ const rusPrice = price => {
 const app = express();
 
 app.use(helmet());
-// app.use(cors());
+app.use(cors());
 
 app.get('/gcu/:id', (req, res) => {
   form.append('TechKeyword', '');
