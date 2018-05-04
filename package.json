@@ -23,6 +23,7 @@
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
+    "check": "node check.js",
     "build": "webpack"
   },
   "engines": {
@@ -38,13 +39,7 @@
     "url": "https://github.com/Pr1ma/tinyscrap/issues"
   },
   "nodemonConfig": {
-    "ignore": [
-      "test/*",
-      "docs/*",
-      "node_modules/*",
-      "dist/*",
-      ".vscode/*"
-    ],
+    "ignore": ["test/*", "docs/*", "node_modules/*", "dist/*", ".vscode/*"],
     "delay": "2500"
   }
 }

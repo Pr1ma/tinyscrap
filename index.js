@@ -1,17 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const FormData = require('form-data');
-const fetch = require('node-fetch');
+// const FormData = require('form-data');
+// const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const http = require('http');
-// const https = require('https');
+const querystring = require('querystring');
+const https = require('https');
 const parseString = require('xml2js').parseString;
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
-let form = new FormData();
+// let form = new FormData();
 
 let tomorrow = date => {
   let dd = date.getDate() + 1;
@@ -96,58 +97,135 @@ app.use(helmet());
 app.use(cors());
 
 app.get('/gcu/:id', (req, res) => {
-  form.append('TechKeyword', '');
-  form.append('SoftwareKeyword', `${req.params.id}`);
-  form.append('button', 'Search');
-  form.append('FirstName', '');
-  form.append('LastName', '');
-  form.append('MinimumBasketValue', 5);
+  let postData = querystring.stringify({
+    TechKeyword: '',
+    SoftwareKeyword: `${req.params.id}`,
+    button: 'Search',
+    FirstName: '',
+    LastName: '',
+    MinimumBasketValue: 5
+  });
+  let options = {
+    hostname: 'tradein.game.co.uk',
+    port: 443,
+    path: '/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': postData.length
+    }
+  };
 
-  (async function() {
-    const response = await fetch(
-      'https://tradein.game.co.uk/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
-      {
-        method: 'POST',
-        body: form
-      }
-    );
-    const data = await response.text();
-    const $ = await cheerio.load(data);
-    const result = [];
+  const request = https.request(options, response => {
+    let data;
+    response.on('data', d => {
+      // process.stdout.write(d);
 
-    $('div.row.row-border').each((i, el) => {
-      result.push({
-        id: 'unknown',
-        title:
-          $(el)
-            .find('div.prod-title')
-            .text() +
-          ' ' +
-          platformTranslate(
-            $(el)
-              .find('#platformImage')
-              .attr('alt')
-          ),
-        price: rusPrice(
-          $(el)
-            .find('span.credit-price-field')
-            .text()
-        ),
-        priceForCash: rusPrice(
-          $(el)
-            .find('span.price-field')
-            .text()
-        ),
-        cover: $(el)
-          .find('div.col-xs-6.col-md-4')
-          .children()
-          .first()
-          .attr('src')
-      });
+      data += d;
     });
-    res.status(200).json(result);
-  })();
+
+    response.on('end', () => {
+      let result = [];
+      const $ = cheerio.load(data.toString());
+
+      $('div.row.row-border').each((i, el) => {
+        result.push({
+          id: 'unknown',
+          title:
+            $(el)
+              .find('div.prod-title')
+              .text() +
+            ' ' +
+            platformTranslate(
+              $(el)
+                .find('#platformImage')
+                .attr('alt')
+            ),
+          price: rusPrice(
+            $(el)
+              .find('span.credit-price-field')
+              .text()
+          ),
+          priceForCash: rusPrice(
+            $(el)
+              .find('span.price-field')
+              .text()
+          ),
+          cover: $(el)
+            .find('div.col-xs-6.col-md-4')
+            .children()
+            .first()
+            .attr('src')
+        });
+      });
+      // console.log(result);
+      res.status(200).send(result);
+    });
+  });
+
+  request.on('error', e => {
+    /* eslint-disable */
+    console.error(`problem with request: ${e.message}`);
+    /* eslint-enable */
+  });
+
+  request.write(postData);
+  request.end();
 });
+
+// app.get('/gcu/:id', (req, res) => {
+//   form.append('TechKeyword', '');
+//   form.append('SoftwareKeyword', `${req.params.id}`);
+//   form.append('button', 'Search');
+//   form.append('FirstName', '');
+//   form.append('LastName', '');
+//   form.append('MinimumBasketValue', 5);
+
+//   (async function() {
+//     const response = await fetch(
+//       'https://tradein.game.co.uk/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
+//       {
+//         method: 'POST',
+//         body: form
+//       }
+//     );
+//     const data = await response.text();
+//     const $ = await cheerio.load(data);
+//     const result = [];
+
+//     $('div.row.row-border').each((i, el) => {
+//       result.push({
+//         id: 'unknown',
+//         title:
+//           $(el)
+//             .find('div.prod-title')
+//             .text() +
+//           ' ' +
+//           platformTranslate(
+//             $(el)
+//               .find('#platformImage')
+//               .attr('alt')
+//           ),
+//         price: rusPrice(
+//           $(el)
+//             .find('span.credit-price-field')
+//             .text()
+//         ),
+//         priceForCash: rusPrice(
+//           $(el)
+//             .find('span.price-field')
+//             .text()
+//         ),
+//         cover: $(el)
+//           .find('div.col-xs-6.col-md-4')
+//           .children()
+//           .first()
+//           .attr('src')
+//       });
+//     });
+//     res.status(200).json(result);
+//   })();
+// });
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
