@@ -9,6 +9,8 @@ const querystring = require('querystring');
 const https = require('https');
 const parseString = require('xml2js').parseString;
 
+const stringToHash = require('./stringToHash');
+
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
@@ -91,10 +93,17 @@ const rusPrice = price => {
   return result;
 };
 
+//Вероятно search() здесь избыточен
+const titleNormalizer = title =>
+  title.search(/ - Only at GAME/) !== -1
+    ? title.replace(' - Only at GAME', '')
+    : title;
+
 const app = express();
 
 app.use(helmet());
 app.use(cors());
+app.use('/mdi', express.static(__dirname + '/mdi'));
 
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
@@ -129,34 +138,42 @@ app.get('/gcu/:id', (req, res) => {
       const $ = cheerio.load(data.toString());
 
       $('div.row.row-border').each((i, el) => {
-        const title =
+        let platform = platformTranslate(
+          $(el)
+            .find('#platformImage')
+            .attr('alt')
+        );
+        let title =
           $(el)
             .find('div.prod-title')
             .text() +
           ' ' +
-          platformTranslate(
-            $(el)
-              .find('#platformImage')
-              .attr('alt')
-          );
+          platform;
+        let price = $(el)
+          .find('span.credit-price-field')
+          .text();
+        let priceForCash = $(el)
+          .find('span.price-field')
+          .text();
+        let cover = $(el)
+          .find('div.col-xs-6.col-md-4')
+          .children()
+          .first()
+          .attr('src');
         result.push({
-          id: title.trim(),
-          title: title,
-          price: rusPrice(
-            $(el)
-              .find('span.credit-price-field')
-              .text()
-          ),
-          priceForCash: rusPrice(
-            $(el)
-              .find('span.price-field')
-              .text()
-          ),
-          cover: $(el)
-            .find('div.col-xs-6.col-md-4')
-            .children()
-            .first()
-            .attr('src')
+          id: stringToHash.unique(title),
+          title: titleNormalizer(title),
+          price: rusPrice(price),
+          priceForCash: rusPrice(priceForCash),
+          cover:
+            cover.search(
+              /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
+            ) === -1
+              ? cover
+              : '<i class="material-icons">broken_image</i>',
+          filters: {
+            platform: platform
+          }
         });
       });
       res.status(200).send(result);
@@ -178,5 +195,5 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use('*', (req, res) => {
   res.status(403).end();
 });
-
-app.listen(PORT, HOST);
+/* eslint-disable-next-line no-console */
+app.listen(PORT, HOST, console.log('App was started'));

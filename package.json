@@ -1,6 +1,6 @@
 {
   "name": "tinyscrap",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Homeless scrapping server",
   "private": true,
   "dependencies": {
@@ -8,9 +8,7 @@
     "cheerio": "^1.0.0-rc.2",
     "cors": "^2.8.4",
     "express": "^4.16.3",
-    "form-data": "^2.3.2",
     "helmet": "^3.12.0",
-    "node-fetch": "^2.1.2",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
