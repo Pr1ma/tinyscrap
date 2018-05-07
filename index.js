@@ -103,7 +103,14 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
-app.use('/images', express.static(__dirname + '/images'));
+app.use(
+  '/images',
+  (req, res, next) => {
+    console.log(req);
+    next();
+  },
+  express.static(__dirname + '/images')
+);
 
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
