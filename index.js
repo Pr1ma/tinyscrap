@@ -103,7 +103,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
-app.use('/mdi', express.static(__dirname + '/mdi'));
+app.use('/images', express.static(__dirname + '/images'));
 
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
@@ -170,7 +170,9 @@ app.get('/gcu/:id', (req, res) => {
               /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
             ) === -1
               ? cover
-              : `${process.env.HOST}:${process.env.PORT}/images/no_photo.jpg`,
+              : // For local dev
+            // : `${HOST}:${PORT}/images/no_photo.jpg`,
+              `${HOST}/images/no_photo.jpg`,
           filters: {
             platform: platform
           }
