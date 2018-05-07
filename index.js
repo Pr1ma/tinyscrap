@@ -106,7 +106,9 @@ app.use(cors());
 app.use(
   '/images',
   (req, res, next) => {
+    /* eslint-disable */
     console.log(req);
+    /* eslint-enable */
     next();
   },
   express.static(__dirname + '/images')
@@ -214,7 +216,9 @@ app.get('/images/:name', (req, res, next) => {
     if (err) {
       next(err);
     } else {
+      /* eslint-disable */
       console.log('Sent:', fileName);
+      /* eslint-enable */
     }
   });
 });
