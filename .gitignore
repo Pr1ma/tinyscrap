@@ -16,7 +16,6 @@ lib-cov
 
 #images
 *.png
-*.jpg
 *.jpeg
 *.bmp
 

@@ -103,16 +103,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
-app.use(
-  '/images',
-  (req, res, next) => {
-    /* eslint-disable */
-    console.log(req);
-    /* eslint-enable */
-    next();
-  },
-  express.static(__dirname + '/images')
-);
+app.use('/images', express.static(__dirname + '/images'));
 
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
@@ -199,28 +190,6 @@ app.get('/gcu/:id', (req, res) => {
 
   request.write(postData);
   request.end();
-});
-
-app.get('/images/:name', (req, res, next) => {
-  let options = {
-    root: __dirname + '/images/',
-    dotfiles: 'deny',
-    headers: {
-      'x-timestamp': Date.now(),
-      'x-sent': true
-    }
-  };
-
-  let fileName = req.params.name;
-  res.sendFile(fileName, options, err => {
-    if (err) {
-      next(err);
-    } else {
-      /* eslint-disable */
-      console.log('Sent:', fileName);
-      /* eslint-enable */
-    }
-  });
 });
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
