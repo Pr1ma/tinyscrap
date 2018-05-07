@@ -1,6 +1,6 @@
 {
   "name": "tinyscrap",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Homeless scrapping server",
   "private": true,
   "dependencies": {
@@ -37,13 +37,7 @@
     "url": "https://github.com/Pr1ma/tinyscrap/issues"
   },
   "nodemonConfig": {
-    "ignore": [
-      "test/*",
-      "docs/*",
-      "node_modules/*",
-      "dist/*",
-      ".vscode/*"
-    ],
+    "ignore": ["test/*", "docs/*", "node_modules/*", "dist/*", ".vscode/*"],
     "delay": "2500"
   }
 }

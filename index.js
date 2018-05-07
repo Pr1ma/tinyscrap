@@ -13,7 +13,6 @@ const stringToHash = require('./stringToHash');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
-const os = require('os');
 
 // let form = new FormData();
 
@@ -193,10 +192,30 @@ app.get('/gcu/:id', (req, res) => {
   request.end();
 });
 
+app.get('/images/:name', (req, res, next) => {
+  let options = {
+    root: __dirname + '/images/',
+    dotfiles: 'deny',
+    headers: {
+      'x-timestamp': Date.now(),
+      'x-sent': true
+    }
+  };
+
+  let fileName = req.params.name;
+  res.sendFile(fileName, options, err => {
+    if (err) {
+      next(err);
+    } else {
+      console.log('Sent:', fileName);
+    }
+  });
+});
+
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.use('*', (req, res) => {
   res.status(403).end();
 });
 /* eslint-disable-next-line no-console */
-app.listen(PORT, HOST, console.log('App was started', os.networkInterfaces()));
+app.listen(PORT, HOST, console.log('App was started'));
