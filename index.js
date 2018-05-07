@@ -13,6 +13,7 @@ const stringToHash = require('./stringToHash');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
+const os = require('os');
 
 // let form = new FormData();
 
@@ -172,7 +173,7 @@ app.get('/gcu/:id', (req, res) => {
               ? cover
               : // For local dev
             // : `${HOST}:${PORT}/images/no_photo.jpg`,
-              `${HOST}/images/no_photo.jpg`,
+              'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
           filters: {
             platform: platform
           }
@@ -198,4 +199,4 @@ app.use('*', (req, res) => {
   res.status(403).end();
 });
 /* eslint-disable-next-line no-console */
-app.listen(PORT, HOST, console.log('App was started'));
+app.listen(PORT, HOST, console.log('App was started', os.networkInterfaces()));
