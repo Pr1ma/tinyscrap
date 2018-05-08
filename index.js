@@ -1,15 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-// const FormData = require('form-data');
-// const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const http = require('http');
 const querystring = require('querystring');
 const https = require('https');
 const parseString = require('xml2js').parseString;
-
+const iconv = require('iconv-lite');
 const stringToHash = require('./stringToHash');
+const fs = require('fs');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
@@ -99,11 +98,129 @@ const titleNormalizer = title =>
     ? title.replace(' - Only at GAME', '')
     : title;
 
+const removeCh = id => id.replace('ch_', '');
+
 const app = express();
 
 app.use(helmet());
 app.use(cors());
 app.use('/images', express.static(__dirname + '/images'));
+
+app.get('/vi', (req, res) => {
+  https.get('https://videoigr.net/msc_trade_in.php', response => {
+    let data = '';
+
+    response.on('data', chunk => {
+      data += iconv.decode(chunk, 'win1251');
+    });
+
+    response
+      .on('end', () => {
+        const $ = cheerio.load(data.toString('utf8'));
+        let result = [];
+
+        $('#table1 tr:nth-child(2) td:nth-child(2) table:nth-child(2) tr').each(
+          (i, el) => {
+            let id = $(el)
+              .find('input')
+              .attr('id');
+            let title = $(el)
+              .find('td')
+              .eq(1)
+              .text();
+            let price = $(el)
+              .find('input')
+              .attr('price2');
+            let priceForCash = $(el)
+              .find('input')
+              .attr('price1');
+            result.push({
+              id: id,
+              title: title,
+              price: price,
+              priceForCash: priceForCash,
+              cover: 'undefined',
+              language: 'undefined'
+            });
+          }
+        );
+
+        fs.writeFile('./videoigr.json', JSON.stringify(result), error =>
+          console.log(error)
+        );
+
+        console.log(result);
+        res.json(result);
+      })
+      .on('error', err => {
+        throw err;
+      });
+  });
+});
+
+//Just for get covers from game.co.uk
+app.get('/gcu/cover/:id', (req, res) => {
+  let postData = querystring.stringify({
+    TechKeyword: '',
+    SoftwareKeyword: `${req.params.id}`,
+    button: 'Search',
+    FirstName: '',
+    LastName: '',
+    MinimumBasketValue: 5
+  });
+
+  let options = {
+    hostname: 'tradein.game.co.uk',
+    port: 443,
+    path: '/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': postData.length
+    }
+  };
+
+  const request = https.request(options, response => {
+    let data;
+
+    response.on('data', d => {
+      data += d;
+    });
+
+    response.on('end', () => {
+      let result = [];
+      const $ = cheerio.load(data.toString());
+
+      $('div.row.row-border').each((i, el) => {
+        let cover = $(el)
+          .find('div.col-xs-6.col-md-4')
+          .children()
+          .first()
+          .attr('src');
+        result.push({
+          cover:
+            cover.search(
+              /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
+            ) === -1
+              ? cover
+              : // For local dev
+            // : `${HOST}:${PORT}/images/no_photo.jpg`,
+              'https://tinyscrap.herokuapp.com/images/no_photo.svg'
+        });
+      });
+      res.status(200).send(result);
+    });
+  });
+
+  request.on('error', error => {
+    /* eslint-disable */
+    console.error(`problem with request: ${error.message}`);
+    /* eslint-enable */
+  });
+
+  request.write(postData);
+  request.end();
+});
 
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
@@ -149,6 +266,7 @@ app.get('/gcu/:id', (req, res) => {
             .text() +
           ' ' +
           platform;
+        let id = stringToHash.unique(title + platform);
         let price = $(el)
           .find('span.credit-price-field')
           .text();
@@ -161,8 +279,8 @@ app.get('/gcu/:id', (req, res) => {
           .first()
           .attr('src');
         result.push({
-          id: stringToHash.unique(title),
-          title: titleNormalizer(title),
+          id: id,
+          title: titleNormalizer(title) + ' ' + id,
           price: rusPrice(price),
           priceForCash: rusPrice(priceForCash),
           cover:
@@ -173,9 +291,7 @@ app.get('/gcu/:id', (req, res) => {
               : // For local dev
             // : `${HOST}:${PORT}/images/no_photo.jpg`,
               'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
-          filters: {
-            platform: platform
-          }
+          filters: [platform]
         });
       });
       res.status(200).send(result);
