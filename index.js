@@ -9,7 +9,7 @@ const parseString = require('xml2js').parseString;
 const iconv = require('iconv-lite');
 const stringToHash = require('./stringToHash');
 const fs = require('fs');
-// const bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
@@ -54,13 +54,14 @@ function platformTranslate(input) {
   return output;
 }
 
-// function getVideoigrPlatform(input) {
-//   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
-
-//   const result = platforms.exec(input);
-//   if (result === null) return;
-//   return result[0];
-// }
+//сделать trim + tolowercase + переименовать
+//сделать массив платформ
+function getVideoigrPlatform(input) {
+  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+  const result = platforms.exec(input);
+  if (result === null) return;
+  return result[0];
+}
 
 // function getVideoigrPlatform(input) {
 //   if (typeof input !== 'string') return 'input must be a string';
@@ -137,11 +138,31 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
-// app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use('/images', express.static(__dirname + '/images'));
 
-app.post();
+app.post('/check', (req, res) => {
+  //Обработка запроса - start
+
+  //Обработка запроса - end
+
+  //Готовим ответ
+  res.setHeader('Content-Type', 'application/json');
+  res.send(
+    JSON.stringify({
+      ok: true,
+      message: ['Ok'],
+      cart: [
+        {
+          id: 123454,
+          price: 100,
+          priceForCash: 50
+        }
+      ]
+    })
+  );
+});
 
 app.get('/vi', (req, res) => {
   https.get('https://videoigr.net/msc_trade_in.php', response => {
@@ -196,70 +217,6 @@ app.get('/vi', (req, res) => {
         throw err;
       });
   });
-});
-
-//Just for get covers from game.co.uk
-app.get('/gcu/cover/:id', (req, res) => {
-  let postData = querystring.stringify({
-    TechKeyword: '',
-    SoftwareKeyword: `${req.params.id}`,
-    button: 'Search',
-    FirstName: '',
-    LastName: '',
-    MinimumBasketValue: 5
-  });
-
-  let options = {
-    hostname: 'tradein.game.co.uk',
-    port: 443,
-    path: '/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': postData.length
-    }
-  };
-
-  const request = https.request(options, response => {
-    let data;
-
-    response.on('data', d => {
-      data += d;
-    });
-
-    response.on('end', () => {
-      let result = [];
-      const $ = cheerio.load(data.toString());
-
-      $('div.row.row-border').each((i, el) => {
-        let cover = $(el)
-          .find('div.col-xs-6.col-md-4')
-          .children()
-          .first()
-          .attr('src');
-        result.push({
-          cover:
-            cover.search(
-              /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
-            ) === -1
-              ? cover
-              : // For local dev
-            // : `${HOST}:${PORT}/images/no_photo.jpg`,
-              'https://tinyscrap.herokuapp.com/images/no_photo.svg'
-        });
-      });
-      res.status(200).send(result);
-    });
-  });
-
-  request.on('error', error => {
-    /* eslint-disable */
-    console.error(`problem with request: ${error.message}`);
-    /* eslint-enable */
-  });
-
-  request.write(postData);
-  request.end();
 });
 
 //Game.co.uk
