@@ -9,6 +9,7 @@ const parseString = require('xml2js').parseString;
 const iconv = require('iconv-lite');
 const stringToHash = require('./stringToHash');
 const fs = require('fs');
+// const bodyParser = require('body-parser');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
@@ -52,6 +53,38 @@ function platformTranslate(input) {
   }
   return output;
 }
+
+// function getVideoigrPlatform(input) {
+//   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+
+//   const result = platforms.exec(input);
+//   if (result === null) return;
+//   return result[0];
+// }
+
+// function getVideoigrPlatform(input) {
+//   if (typeof input !== 'string') return 'input must be a string';
+//   if (input.includes('PS3')) return 'PS3';
+//   if (input.includes('Nintendo Wii U')) return 'Wii U';
+//   if (input.includes('Nintendo 3DS')) return '3DS';
+//   if (input.includes('PS Vita')) return 'PSVita';
+//   if (input.includes('Xbox One')) return 'Xbox One';
+//   if (input.includes('PS4')) return 'PS4';
+//   if (input.includes('Nintendo Switch')) return 'NSwitch';
+//   return input;
+// }
+
+// function getVideoigrEdition(input) {
+//   if (typeof input !== 'string') return 'input must be a string';
+//   if (input.includes('PS3')) return 'PS3';
+//   return input;
+// }
+
+// function getVideoigrLanguage(input) {
+//   if (typeof input !== 'string') return 'input must be a string';
+//   if (input.includes('PS3')) return 'PS3';
+//   return input;
+// }
 
 let exchangeRate;
 
@@ -98,13 +131,17 @@ const titleNormalizer = title =>
     ? title.replace(' - Only at GAME', '')
     : title;
 
-const removeCh = id => id.replace('ch_', '');
+// const removeCh = id => id.replace('ch_', '');
 
 const app = express();
 
 app.use(helmet());
 app.use(cors());
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
 app.use('/images', express.static(__dirname + '/images'));
+
+app.post();
 
 app.get('/vi', (req, res) => {
   https.get('https://videoigr.net/msc_trade_in.php', response => {
@@ -134,22 +171,25 @@ app.get('/vi', (req, res) => {
             let priceForCash = $(el)
               .find('input')
               .attr('price1');
+            // let platform = getVideoigrPlatform(title);
+            let platform = title;
             result.push({
               id: id,
               title: title,
               price: price,
               priceForCash: priceForCash,
               cover: 'undefined',
+              filters: [platform],
               language: 'undefined'
             });
           }
         );
 
-        fs.writeFile('./videoigr.json', JSON.stringify(result), error =>
-          console.log(error)
-        );
+        // fs.writeFile('./videoigr.json', JSON.stringify(result), error =>
+        //   console.log(error)
+        // );
 
-        console.log(result);
+        // console.log(result);
         res.json(result);
       })
       .on('error', err => {
@@ -222,6 +262,7 @@ app.get('/gcu/cover/:id', (req, res) => {
   request.end();
 });
 
+//Game.co.uk
 app.get('/gcu/:id', (req, res) => {
   let postData = querystring.stringify({
     TechKeyword: '',
@@ -291,7 +332,8 @@ app.get('/gcu/:id', (req, res) => {
               : // For local dev
             // : `${HOST}:${PORT}/images/no_photo.jpg`,
               'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
-          filters: [platform]
+          filters: [platform],
+          language: 'undefined'
         });
       });
       res.status(200).send(result);
