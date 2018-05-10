@@ -8,51 +8,14 @@ const https = require('https');
 const parseString = require('xml2js').parseString;
 const iconv = require('iconv-lite');
 const stringToHash = require('./stringToHash');
-const fs = require('fs');
+const helpers = require('./helpers');
+// const fs = require('fs');
 const bodyParser = require('body-parser');
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
 // let form = new FormData();
-
-let tomorrow = date => {
-  let dd = date.getDate() + 1;
-  let mm = date.getMonth() + 1;
-  let yyyy = date.getFullYear();
-  if (dd < 10) {
-    dd = '0' + dd;
-  }
-  if (mm < 10) {
-    mm = '0' + mm;
-  }
-  return dd + '/' + mm + '/' + yyyy;
-};
-
-function platformTranslate(input) {
-  if (typeof input !== 'string') return 'input must be a string';
-  let output;
-  switch (input) {
-  case 'XB2':
-    output = 'Xbox 360';
-    break;
-  case 'XB3':
-    output = 'Xbox One';
-    break;
-  case 'WIU':
-    output = 'Wii U';
-    break;
-  case 'WII':
-    output = 'Wii';
-    break;
-  case 'NSW':
-    output = 'NSwitch';
-    break;
-  default:
-    output = input;
-  }
-  return output;
-}
 
 //сделать trim + tolowercase + переименовать
 //сделать массив платформ
@@ -63,35 +26,13 @@ function getVideoigrPlatform(input) {
   return result[0];
 }
 
-// function getVideoigrPlatform(input) {
-//   if (typeof input !== 'string') return 'input must be a string';
-//   if (input.includes('PS3')) return 'PS3';
-//   if (input.includes('Nintendo Wii U')) return 'Wii U';
-//   if (input.includes('Nintendo 3DS')) return '3DS';
-//   if (input.includes('PS Vita')) return 'PSVita';
-//   if (input.includes('Xbox One')) return 'Xbox One';
-//   if (input.includes('PS4')) return 'PS4';
-//   if (input.includes('Nintendo Switch')) return 'NSwitch';
-//   return input;
-// }
-
-// function getVideoigrEdition(input) {
-//   if (typeof input !== 'string') return 'input must be a string';
-//   if (input.includes('PS3')) return 'PS3';
-//   return input;
-// }
-
-// function getVideoigrLanguage(input) {
-//   if (typeof input !== 'string') return 'input must be a string';
-//   if (input.includes('PS3')) return 'PS3';
-//   return input;
-// }
-
 let exchangeRate;
 
 function getRate(callback) {
   http.get(
-    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${tomorrow(new Date())}`,
+    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
+      new Date()
+    )}`,
     res => {
       let data = '';
       res.on('data', chunk => {
@@ -121,17 +62,6 @@ setInterval(function getRate(rate) {
   return (exchangeRate = rate);
 }, 86400000);
 
-const rusPrice = price => {
-  const result = Math.round(price.replace('£', '') * exchangeRate / 50) * 50;
-  return result;
-};
-
-//Вероятно search() здесь избыточен
-const titleNormalizer = title =>
-  title.search(/ - Only at GAME/) !== -1
-    ? title.replace(' - Only at GAME', '')
-    : title;
-
 // const removeCh = id => id.replace('ch_', '');
 
 const app = express();
@@ -143,6 +73,7 @@ app.use(bodyParser.json());
 app.use('/images', express.static(__dirname + '/images'));
 
 app.post('/check', (req, res) => {
+  let finalResult;
   //Обработка запроса - start
 
   //Обработка запроса - end
@@ -206,11 +137,6 @@ app.get('/vi', (req, res) => {
           }
         );
 
-        // fs.writeFile('./videoigr.json', JSON.stringify(result), error =>
-        //   console.log(error)
-        // );
-
-        // console.log(result);
         res.json(result);
       })
       .on('error', err => {
@@ -253,7 +179,7 @@ app.get('/gcu/:id', (req, res) => {
       const $ = cheerio.load(data.toString());
 
       $('div.row.row-border').each((i, el) => {
-        let platform = platformTranslate(
+        let platform = helpers.platformTranslate(
           $(el)
             .find('#platformImage')
             .attr('alt')
@@ -278,17 +204,15 @@ app.get('/gcu/:id', (req, res) => {
           .attr('src');
         result.push({
           id: id,
-          title: titleNormalizer(title) + ' ' + id,
-          price: rusPrice(price),
-          priceForCash: rusPrice(priceForCash),
+          title: helpers.gcuTitleNormalizer(title) + ' ' + id,
+          price: helpers.fromGbpToRubPrice(price, exchangeRate),
+          priceForCash: helpers.fromGbpToRubPrice(priceForCash, exchangeRate),
           cover:
             cover.search(
               /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
             ) === -1
               ? cover
-              : // For local dev
-            // : `${HOST}:${PORT}/images/no_photo.jpg`,
-              'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
+              : 'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
           filters: [platform],
           language: 'undefined'
         });
