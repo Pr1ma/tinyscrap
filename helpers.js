@@ -47,7 +47,17 @@ const fromGbpToRubPrice = (price, exchangeRate) => {
   return result;
 };
 
+//сделать trim + tolowercase + переименовать
+//сделать массив платформ
+function getVideoigrPlatform(input) {
+  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+  const result = platforms.exec(input);
+  if (result === null) return;
+  return result[0];
+}
+
 module.exports.tomorrow = tomorrow;
 module.exports.platformTranslate = platformTranslate;
 module.exports.gcuTitleNormalizer = gcuTitleNormalizer;
 module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
+module.exports.getVideoigrPlatform = getVideoigrPlatform;

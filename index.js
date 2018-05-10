@@ -15,138 +15,9 @@ const bodyParser = require('body-parser');
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
-// let form = new FormData();
-
-//сделать trim + tolowercase + переименовать
-//сделать массив платформ
-function getVideoigrPlatform(input) {
-  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
-  const result = platforms.exec(input);
-  if (result === null) return;
-  return result[0];
-}
-
 let exchangeRate;
 
-function getRate(callback) {
-  http.get(
-    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
-      new Date()
-    )}`,
-    res => {
-      let data = '';
-      res.on('data', chunk => {
-        data += chunk;
-      });
-      res
-        .on('end', () => {
-          parseString(data, (err, res2) => {
-            let rate = parseFloat(
-              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
-            );
-            callback(rate);
-          });
-        })
-        .on('error', err => {
-          throw err;
-        });
-    }
-  );
-}
-
-getRate(rate => {
-  return (exchangeRate = rate);
-});
-
-setInterval(function getRate(rate) {
-  return (exchangeRate = rate);
-}, 86400000);
-
-// const removeCh = id => id.replace('ch_', '');
-
-const app = express();
-
-app.use(helmet());
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use('/images', express.static(__dirname + '/images'));
-
-app.post('/check', (req, res) => {
-  let finalResult;
-  //Обработка запроса - start
-
-  //Обработка запроса - end
-
-  //Готовим ответ
-  res.setHeader('Content-Type', 'application/json');
-  res.send(
-    JSON.stringify({
-      ok: true,
-      message: ['Ok'],
-      cart: [
-        {
-          id: 123454,
-          price: 100,
-          priceForCash: 50
-        }
-      ]
-    })
-  );
-});
-
-app.get('/vi', (req, res) => {
-  https.get('https://videoigr.net/msc_trade_in.php', response => {
-    let data = '';
-
-    response.on('data', chunk => {
-      data += iconv.decode(chunk, 'win1251');
-    });
-
-    response
-      .on('end', () => {
-        const $ = cheerio.load(data.toString('utf8'));
-        let result = [];
-
-        $('#table1 tr:nth-child(2) td:nth-child(2) table:nth-child(2) tr').each(
-          (i, el) => {
-            let id = $(el)
-              .find('input')
-              .attr('id');
-            let title = $(el)
-              .find('td')
-              .eq(1)
-              .text();
-            let price = $(el)
-              .find('input')
-              .attr('price2');
-            let priceForCash = $(el)
-              .find('input')
-              .attr('price1');
-            // let platform = getVideoigrPlatform(title);
-            let platform = title;
-            result.push({
-              id: id,
-              title: title,
-              price: price,
-              priceForCash: priceForCash,
-              cover: 'undefined',
-              filters: [platform],
-              language: 'undefined'
-            });
-          }
-        );
-
-        res.json(result);
-      })
-      .on('error', err => {
-        throw err;
-      });
-  });
-});
-
-//Game.co.uk
-app.get('/gcu/:id', (req, res) => {
+function getGcuGames(req, res) {
   let postData = querystring.stringify({
     TechKeyword: '',
     SoftwareKeyword: `${req.params.id}`,
@@ -155,7 +26,7 @@ app.get('/gcu/:id', (req, res) => {
     LastName: '',
     MinimumBasketValue: 5
   });
-
+  console.log(req.params);
   let options = {
     hostname: 'tradein.game.co.uk',
     port: 443,
@@ -204,7 +75,7 @@ app.get('/gcu/:id', (req, res) => {
           .attr('src');
         result.push({
           id: id,
-          title: helpers.gcuTitleNormalizer(title) + ' ' + id,
+          title: helpers.gcuTitleNormalizer(title),
           price: helpers.fromGbpToRubPrice(price, exchangeRate),
           priceForCash: helpers.fromGbpToRubPrice(priceForCash, exchangeRate),
           cover:
@@ -213,7 +84,7 @@ app.get('/gcu/:id', (req, res) => {
             ) === -1
               ? cover
               : 'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
-          filters: [platform],
+          filters: [{ platform: platform }],
           language: 'undefined'
         });
       });
@@ -229,7 +100,114 @@ app.get('/gcu/:id', (req, res) => {
 
   request.write(postData);
   request.end();
+}
+
+function getVideoigrPreownedGamesPrices(req, res) {
+  https.get('https://videoigr.net/msc_trade_in.php', response => {
+    let data = '';
+
+    response.on('data', chunk => {
+      data += iconv.decode(chunk, 'win1251');
+    });
+
+    response
+      .on('end', () => {
+        const $ = cheerio.load(data.toString('utf8'));
+        let result = [];
+
+        $('#table1 tr:nth-child(2) td:nth-child(2) table:nth-child(2) tr').each(
+          (i, el) => {
+            let id = $(el)
+              .find('input')
+              .attr('id');
+            let title = $(el)
+              .find('td')
+              .eq(1)
+              .text();
+            let price = $(el)
+              .find('input')
+              .attr('price2');
+            let priceForCash = $(el)
+              .find('input')
+              .attr('price1');
+            let platform = helpers.getVideoigrPlatform(title);
+            // let platform = title;
+            result.push({
+              id: id,
+              title: title,
+              price: price,
+              priceForCash: priceForCash,
+              cover: 'undefined',
+              filters: [platform],
+              language: 'undefined'
+            });
+          }
+        );
+
+        res.json(result);
+      })
+      .on('error', err => {
+        throw err;
+      });
+  });
+}
+
+function getRate(callback) {
+  http.get(
+    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
+      new Date()
+    )}`,
+    res => {
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      res
+        .on('end', () => {
+          parseString(data, (err, res2) => {
+            let rate = parseFloat(
+              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
+            );
+            callback(rate);
+          });
+        })
+        .on('error', err => {
+          throw err;
+        });
+    }
+  );
+}
+
+getRate(rate => {
+  return (exchangeRate = rate);
 });
+
+setInterval(function getRate(rate) {
+  return (exchangeRate = rate);
+}, 86400000);
+
+// const removeCh = id => id.replace('ch_', '');
+
+const app = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use('/images', express.static(__dirname + '/images'));
+
+app.post('/check', (req, res) => {
+  let requestedGames = req.body.cartInitial.map(el => el.title);
+  console.log(requestedGames);
+  getGcuGames;
+  // res.send(req.body);
+  res.status(200).send('Ok');
+});
+
+app.get('/vi', getVideoigrPreownedGamesPrices);
+
+//Game.co.uk
+app.use('/gcu/:id', getGcuGames);
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
