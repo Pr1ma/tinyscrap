@@ -56,11 +56,10 @@ function getGcuGames(name, callback) {
             .find('#platformImage')
             .attr('alt')
         );
-        let title =
-          $(el)
-            .find('div.prod-title')
-            .text() + platform;
-        let id = stringToHash.unique(title + platform);
+        let title = $(el)
+          .find('div.prod-title')
+          .text();
+        let id = stringToHash.unique(title + ' ' + platform);
         let price = $(el)
           .find('span.credit-price-field')
           .text();
@@ -74,7 +73,7 @@ function getGcuGames(name, callback) {
           .attr('src');
         result.push({
           id: id,
-          title: helpers.gcuTitleNormalizer(title),
+          title: helpers.gcuTitleNormalizer(title) + ' ' + platform,
           price: helpers.fromGbpToRubPrice(price, exchangeRate),
           priceForCash: helpers.fromGbpToRubPrice(priceForCash, exchangeRate),
           cover:
@@ -82,9 +81,9 @@ function getGcuGames(name, callback) {
               /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
             ) === -1
               ? cover
-              : 'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
-          tags: [platform],
-          language: 'undefined'
+              : 'https://tinyscrap.herokuapp.com/images/no_photo.svg',
+          tags: [platform]
+          // language: 'undefined'
         });
       });
       callback(result);

@@ -25,19 +25,28 @@ function gcuPlatformTranslate(input) {
   let output;
   switch (input) {
   case 'XB2':
-    output = 'Xbox 360';
+    output = '[X360]';
     break;
   case 'XB3':
-    output = 'Xbox One';
+    output = '[Xbox One]';
     break;
   case 'WIU':
-    output = 'Wii U';
+    output = '[Wii U]';
     break;
   case 'WII':
-    output = 'Wii';
+    output = '[Wii]';
     break;
   case 'NSW':
-    output = 'NSwitch';
+    output = '[NSwitch]';
+    break;
+  case 'PSV':
+    output = '[PS Vita]';
+    break;
+  case '3DS':
+    output = '[3DS]';
+    break;
+  case 'NDS':
+    output = '[NDS]';
     break;
   default:
     output = input;
