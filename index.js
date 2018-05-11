@@ -11,22 +11,23 @@ const stringToHash = require('./stringToHash');
 const helpers = require('./helpers');
 // const fs = require('fs');
 const bodyParser = require('body-parser');
-
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
 let exchangeRate;
 
-function getGcuGames(req, res) {
+// const gamebuyPlatformsPattern = /(X360)|(Xbox One)|(Wii U)|(Wii)|(NSwitch)|(3DS)|(NDS)|(PS3)|(PS4)/;
+
+function getGcuGames(name, callback) {
   let postData = querystring.stringify({
     TechKeyword: '',
-    SoftwareKeyword: `${req.params.id}`,
+    SoftwareKeyword: name,
     button: 'Search',
     FirstName: '',
     LastName: '',
     MinimumBasketValue: 5
   });
-  console.log(req.params);
+
   let options = {
     hostname: 'tradein.game.co.uk',
     port: 443,
@@ -50,7 +51,7 @@ function getGcuGames(req, res) {
       const $ = cheerio.load(data.toString());
 
       $('div.row.row-border').each((i, el) => {
-        let platform = helpers.platformTranslate(
+        let platform = helpers.gcuPlatformTranslate(
           $(el)
             .find('#platformImage')
             .attr('alt')
@@ -58,9 +59,7 @@ function getGcuGames(req, res) {
         let title =
           $(el)
             .find('div.prod-title')
-            .text() +
-          ' ' +
-          platform;
+            .text() + platform;
         let id = stringToHash.unique(title + platform);
         let price = $(el)
           .find('span.credit-price-field')
@@ -84,11 +83,11 @@ function getGcuGames(req, res) {
             ) === -1
               ? cover
               : 'https://tinyscrap.herokuapp.com/images/no_photo.jpg',
-          filters: [{ platform: platform }],
+          tags: [platform],
           language: 'undefined'
         });
       });
-      res.status(200).send(result);
+      callback(result);
     });
   });
 
@@ -198,16 +197,27 @@ app.use('/images', express.static(__dirname + '/images'));
 
 app.post('/check', (req, res) => {
   let requestedGames = req.body.cartInitial.map(el => el.title);
-  console.log(requestedGames);
-  getGcuGames;
-  // res.send(req.body);
-  res.status(200).send('Ok');
+  let result = [];
+
+  for (let i = 0; i < requestedGames.length; i++) {
+    getGcuGames(requestedGames[i], data => {
+      if (data.length === 0)
+        result.push({ message: 'Не смогли оценить позицию' });
+      result.push(data[0]);
+    });
+  }
+
+  res.status(200).send(result);
 });
 
 app.get('/vi', getVideoigrPreownedGamesPrices);
 
 //Game.co.uk
-app.use('/gcu/:id', getGcuGames);
+app.use('/gcu/:id', (req, res) => {
+  getGcuGames(req.params.id, data => {
+    res.status(200).send(data);
+  });
+});
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 

@@ -11,7 +11,16 @@ const tomorrow = date => {
   return dd + '/' + mm + '/' + yyyy;
 };
 
-function platformTranslate(input) {
+//сделать trim + tolowercase + переименовать
+//сделать массив платформ
+function getGcuEdition(input) {
+  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+  const result = platforms.exec(input);
+  if (result === null) return;
+  return result[0];
+}
+
+function gcuPlatformTranslate(input) {
   if (typeof input !== 'string') return 'input must be a string';
   let output;
   switch (input) {
@@ -57,7 +66,8 @@ function getVideoigrPlatform(input) {
 }
 
 module.exports.tomorrow = tomorrow;
-module.exports.platformTranslate = platformTranslate;
+module.exports.gcuPlatformTranslate = gcuPlatformTranslate;
 module.exports.gcuTitleNormalizer = gcuTitleNormalizer;
 module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
 module.exports.getVideoigrPlatform = getVideoigrPlatform;
+module.exports.getGcuEdition = getGcuEdition;
