@@ -204,7 +204,7 @@ app.use('/gcu/:id', (req, res) => {
 app.post('/check', (req, res) => {
   let result = [];
 
-  let requestedGames = req.body.cartInitial.map(el => ({
+  const requestedGames = req.body.cartInitial.map(el => ({
     title: el.title,
     id: el.id,
     price: el.price,
@@ -223,22 +223,15 @@ app.post('/check', (req, res) => {
   }
   un(requestedGames);
 
-  console.log('toSearch', toSearch);
   (() => {
     for (let i = 0; i < toSearch.length; i++) {
       getGcuGames(toSearch[i], data => {
-        //Какая-то проверка
-        if (data.length === 0)
-          result.push({ message: 'Не смогли оценить позицию' });
-        // console.log(data[0].price);
-        //проверка на соответствие цен
-        // if (
-        //   requestedGames.price === data[0].price &&
-        //   requestedGames.priceForCash === data[0].priceForCash
-        // )
-        // console.log('Цены РАВНЫ');
+        if (data.length === 0) result.push({ message: 'Длинна ответа = 0' });
 
-        result.push(data[0]);
+        //Сверяем id
+
+        result.push(data);
+        console.log('INNER FINAL: ', result);
       });
     }
   })();
