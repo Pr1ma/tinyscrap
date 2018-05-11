@@ -13,17 +13,33 @@ const tomorrow = date => {
 
 //сделать trim + tolowercase + переименовать
 //сделать массив платформ
-function getGcuEdition(input) {
-  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
-  const result = platforms.exec(input);
-  if (result === null) return;
-  return result[0];
+// function getGcuEdition(input) {
+//   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+//   const result = platforms.exec(input);
+//   if (result === null) return;
+//   return result[0];
+// }
+
+const gamebuyPlatformsPattern = /(\[X360\])|(\[Xbox One\])|(\[Wii U\])|(\[Wii\])|(\[NSwitch\])|(\[3DS\])|(\[NDS\])|(\[PS3\])|(\[PS4\])/;
+
+function removeGbPlatform(input) {
+  return input.replace(gamebuyPlatformsPattern, '').trim();
 }
+
+// function removeGameEdition(input) {
+
+// }
 
 function gcuPlatformTranslate(input) {
   if (typeof input !== 'string') return 'input must be a string';
   let output;
   switch (input) {
+  case 'PS4':
+    output = '[PS4]';
+    break;
+  case 'PS3':
+    output = '[PS3]';
+    break;
   case 'XB2':
     output = '[X360]';
     break;
@@ -79,4 +95,5 @@ module.exports.gcuPlatformTranslate = gcuPlatformTranslate;
 module.exports.gcuTitleNormalizer = gcuTitleNormalizer;
 module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
 module.exports.getVideoigrPlatform = getVideoigrPlatform;
-module.exports.getGcuEdition = getGcuEdition;
+// module.exports.getGcuEdition = getGcuEdition;
+module.exports.removeGbPlatform = removeGbPlatform;

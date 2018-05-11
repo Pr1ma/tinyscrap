@@ -16,8 +16,6 @@ const PORT = process.env.PORT || 8080;
 
 let exchangeRate;
 
-// const gamebuyPlatformsPattern = /(X360)|(Xbox One)|(Wii U)|(Wii)|(NSwitch)|(3DS)|(NDS)|(PS3)|(PS4)/;
-
 function getGcuGames(name, callback) {
   let postData = querystring.stringify({
     TechKeyword: '',
@@ -27,7 +25,8 @@ function getGcuGames(name, callback) {
     LastName: '',
     MinimumBasketValue: 5
   });
-
+  /* eslint-disable-next-line no-console */
+  console.log('Incoming name: ', name);
   let options = {
     hostname: 'tradein.game.co.uk',
     port: 443,
@@ -86,6 +85,8 @@ function getGcuGames(name, callback) {
           // language: 'undefined'
         });
       });
+      /* eslint-disable-next-line no-console */
+      console.log('HTTP.request result: ', result);
       callback(result);
     });
   });
@@ -136,8 +137,8 @@ function getVideoigrPreownedGamesPrices(req, res) {
               price: price,
               priceForCash: priceForCash,
               cover: 'undefined',
-              filters: [platform],
-              language: 'undefined'
+              tags: [platform]
+              // language: 'undefined'
             });
           }
         );
@@ -194,29 +195,49 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use('/images', express.static(__dirname + '/images'));
 
-app.post('/check', (req, res) => {
-  let requestedGames = req.body.cartInitial.map(el => el.title);
-  let result = [];
-
-  for (let i = 0; i < requestedGames.length; i++) {
-    getGcuGames(requestedGames[i], data => {
-      if (data.length === 0)
-        result.push({ message: 'Не смогли оценить позицию' });
-      result.push(data[0]);
-    });
-  }
-
-  res.status(200).send(result);
-});
-
-app.get('/vi', getVideoigrPreownedGamesPrices);
-
-//Game.co.uk
 app.use('/gcu/:id', (req, res) => {
   getGcuGames(req.params.id, data => {
     res.status(200).send(data);
   });
 });
+
+app.post('/check', (req, res) => {
+  let requestedGames = req.body.cartInitial.map(el => ({
+    title: helpers.removeGbPlatform(el.title),
+    id: el.id,
+    price: el.price,
+    priceForCash: el.priceForCash
+  }));
+
+  let result = [];
+
+  (() => {
+    for (let i = 0; i < requestedGames.length; i++) {
+      getGcuGames(requestedGames[i].title, data => {
+        //Какая-то проверка
+        if (data.length === 0)
+          result.push({ message: 'Не смогли оценить позицию' });
+        console.log(data[0].price);
+        //проверка на соответствие цен
+        // if (
+        //   requestedGames.price === data[0].price &&
+        //   requestedGames.priceForCash === data[0].priceForCash
+        // )
+        console.log('Цены РАВНЫ');
+
+        result.push(data[0]);
+      });
+    }
+  })();
+  console.log('FINAL: ', result);
+  res.status(200).send(result);
+});
+
+app.get('/gettags', (req, res) => {
+  res.status(200).send('Until today we have nothing');
+});
+
+app.get('/vi', getVideoigrPreownedGamesPrices);
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
