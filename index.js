@@ -217,19 +217,19 @@ app.post('/check', (req, res) => {
         //Какая-то проверка
         if (data.length === 0)
           result.push({ message: 'Не смогли оценить позицию' });
-        console.log(data[0].price);
+        // console.log(data[0].price);
         //проверка на соответствие цен
         // if (
         //   requestedGames.price === data[0].price &&
         //   requestedGames.priceForCash === data[0].priceForCash
         // )
-        console.log('Цены РАВНЫ');
+        // console.log('Цены РАВНЫ');
 
         result.push(data[0]);
       });
     }
   })();
-  console.log('FINAL: ', result);
+  // console.log('FINAL: ', result);
   res.status(200).send(result);
 });
 
