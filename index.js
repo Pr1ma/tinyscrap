@@ -151,7 +151,7 @@ function getVideoigrPreownedGamesPrices(req, res) {
   });
 }
 
-function getRate(callback) {
+function getExchangeRate(callback) {
   http.get(
     `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
       new Date()
@@ -177,11 +177,11 @@ function getRate(callback) {
   );
 }
 
-getRate(rate => {
+getExchangeRate(rate => {
   return (exchangeRate = rate);
 });
 
-setInterval(function getRate(rate) {
+setInterval(function getExchangeRate(rate) {
   return (exchangeRate = rate);
 }, 86400000);
 
@@ -202,18 +202,31 @@ app.use('/gcu/:id', (req, res) => {
 });
 
 app.post('/check', (req, res) => {
+  let result = [];
+
   let requestedGames = req.body.cartInitial.map(el => ({
-    title: helpers.removeGbPlatform(el.title),
+    title: el.title,
     id: el.id,
     price: el.price,
     priceForCash: el.priceForCash
   }));
 
-  let result = [];
+  let toSearch = [];
 
+  function un(arr) {
+    let obj = {};
+    for (let i = 0; i < arr.length; i++) {
+      let str = helpers.removeGbPlatform(arr[i].title);
+      obj[str] = true;
+    }
+    return (toSearch = Object.keys(obj));
+  }
+  un(requestedGames);
+
+  console.log('toSearch', toSearch);
   (() => {
-    for (let i = 0; i < requestedGames.length; i++) {
-      getGcuGames(requestedGames[i].title, data => {
+    for (let i = 0; i < toSearch.length; i++) {
+      getGcuGames(toSearch[i], data => {
         //Какая-то проверка
         if (data.length === 0)
           result.push({ message: 'Не смогли оценить позицию' });
@@ -229,7 +242,9 @@ app.post('/check', (req, res) => {
       });
     }
   })();
-  // console.log('FINAL: ', result);
+
+  //Надо решить проблему с асинхронностью
+  console.log('FINAL: ', result);
   res.status(200).send(result);
 });
 
