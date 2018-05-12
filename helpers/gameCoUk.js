@@ -79,7 +79,7 @@ function getGcuGames(name, callback) {
         });
       });
       /* eslint-disable-next-line no-console */
-      console.log('HTTP.request result: ', result);
+      // console.log('HTTP.request result: ', result);
       callback(result);
     });
   });

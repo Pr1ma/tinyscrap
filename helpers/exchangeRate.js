@@ -33,6 +33,7 @@ function getRate(callback) {
 
 new Promise(res => getRate(res))
   .then(result => (exchangeRate.value = result))
+  /* eslint-disable-next-line no-console */
   .then(result => console.log('Exchange = ', result));
 
 module.exports = exchangeRate;

@@ -89,8 +89,35 @@ app.use('/gcu/:id', (req, res) => {
 app.post('/check', async (req, res) => {
   const requestedGames = req.body.cart.map(
     el =>
-      new Promise((resolve, reject) => {
-        const title = helpers.removeGbPlatform(el.title);
+      new Promise(resolve => {
+        const title = helpers
+          .removeGbPlatform(el.title)
+          .toLowerCase()
+          .replace(
+            new RegExp(
+              `(${[
+                '\\.',
+                '&',
+                'the',
+                '’',
+                // '\\\'s',
+                '\\\'',
+                ':',
+                '\\"',
+                'special',
+                'edition',
+                'limited',
+                'collectors',
+                'only'
+              ].join(')|(')})`,
+              'gi'
+            ),
+            ''
+          )
+          .trim()
+          .split(' ', 2)
+          .join(' ');
+
         const id = el.id;
 
         setTimeout(() => {
