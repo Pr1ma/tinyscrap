@@ -86,38 +86,51 @@ app.use('/gcu/:id', (req, res) => {
   });
 });
 
-app.post('/check', (req, res) => {
-  let requestedGames = req.body.cart.map(el => ({
-    title: helpers.removeGbPlatform(el.title),
-    id: el.id,
-    price: el.price,
-    priceForCash: el.priceForCash
-  }));
+app.post('/check', async (req, res) => {
+  const requestedGames = req.body.cart.map(
+    el =>
+      new Promise((resolve, reject) => {
+        const title = helpers.removeGbPlatform(el.title);
+        const id = el.id;
 
-  console.log(requestedGames);
+        setTimeout(() => {
+          getGcuGames(title, data => {
+            const result = data.filter(p => p.id === id)[0] || {
+              id,
+              price: null,
+              priceForCash: null,
+              title
+            };
+            resolve(result);
+          });
+        }, Math.random() * 1000);
+      })
+  );
 
-  let result = [];
+  const resultProducts = await Promise.all(requestedGames);
 
-  (() => {
-    for (let i = 0; i < requestedGames.length; i++) {
-      getGcuGames(requestedGames[i].title, data => {
-        //Какая-то проверка
-        if (data.length === 0)
-          result.push({ message: 'Не смогли оценить позицию' });
-        // console.log(data[0].price);
-        //проверка на соответствие цен
-        // if (
-        //   requestedGames.price === data[0].price &&
-        //   requestedGames.priceForCash === data[0].priceForCash
-        // )
-        // console.log('Цены РАВНЫ');
+  // let result = [];
 
-        result.push(data[0]);
-      });
-    }
-  })();
+  // (() => {
+  //   for (let i = 0; i < requestedGames.length; i++) {
+  //     getGcuGames(requestedGames[i].title, data => {
+  //       //Какая-то проверка
+  //       if (data.length === 0)
+  //         result.push({ message: 'Не смогли оценить позицию' });
+  //       // console.log(data[0].price);
+  //       //проверка на соответствие цен
+  //       // if (
+  //       //   requestedGames.price === data[0].price &&
+  //       //   requestedGames.priceForCash === data[0].priceForCash
+  //       // )
+  //       // console.log('Цены РАВНЫ');
+
+  //       result.push(data[0]);
+  //     });
+  //   }
+  // })();
   // console.log('FINAL: ', result);
-  res.status(200).send(result);
+  res.status(200).send(resultProducts);
 });
 
 app.get('/gettags', (req, res) => {
