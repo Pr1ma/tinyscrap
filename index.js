@@ -2,104 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cheerio = require('cheerio');
-const http = require('http');
-const querystring = require('querystring');
 const https = require('https');
-const parseString = require('xml2js').parseString;
 const iconv = require('iconv-lite');
-const stringToHash = require('./stringToHash');
 const helpers = require('./helpers');
 // const fs = require('fs');
 const bodyParser = require('body-parser');
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
-let exchangeRate;
-
-function getGcuGames(name, callback) {
-  let postData = querystring.stringify({
-    TechKeyword: '',
-    SoftwareKeyword: name,
-    button: 'Search',
-    FirstName: '',
-    LastName: '',
-    MinimumBasketValue: 5
-  });
-  /* eslint-disable-next-line no-console */
-  console.log('Incoming name: ', name);
-  let options = {
-    hostname: 'tradein.game.co.uk',
-    port: 443,
-    path: '/?cm_sp=TradeInOnline-_-Portal-_-CheckPrices',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': postData.length
-    }
-  };
-
-  const request = https.request(options, response => {
-    let data;
-
-    response.on('data', d => {
-      data += d;
-    });
-
-    response.on('end', () => {
-      let result = [];
-      const $ = cheerio.load(data.toString());
-
-      $('div.row.row-border').each((i, el) => {
-        let platform = helpers.gcuPlatformTranslate(
-          $(el)
-            .find('#platformImage')
-            .attr('alt')
-        );
-        let title = $(el)
-          .find('div.prod-title')
-          .text();
-        let id = stringToHash.unique(title + ' ' + platform);
-        let price = $(el)
-          .find('span.credit-price-field')
-          .text();
-        let priceForCash = $(el)
-          .find('span.price-field')
-          .text();
-        let cover = $(el)
-          .find('div.col-xs-6.col-md-4')
-          .children()
-          .first()
-          .attr('src');
-        result.push({
-          id: id,
-          title: helpers.gcuTitleNormalizer(title) + ' ' + platform,
-          price: helpers.fromGbpToRubPrice(price, exchangeRate),
-          priceForCash: helpers.fromGbpToRubPrice(priceForCash, exchangeRate),
-          cover:
-            cover.search(
-              /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
-            ) === -1
-              ? cover
-              : 'https://tinyscrap.herokuapp.com/images/no_photo.svg',
-          tags: [platform]
-          // language: 'undefined'
-        });
-      });
-      /* eslint-disable-next-line no-console */
-      console.log('HTTP.request result: ', result);
-      callback(result);
-    });
-  });
-
-  request.on('error', error => {
-    /* eslint-disable */
-    console.error(`problem with request: ${error.message}`);
-    /* eslint-enable */
-  });
-
-  request.write(postData);
-  request.end();
-}
+const getGcuGames = require('./helpers/gameCoUk').getGcuGames;
 
 function getVideoigrPreownedGamesPrices(req, res) {
   https.get('https://videoigr.net/msc_trade_in.php', response => {
@@ -151,39 +62,13 @@ function getVideoigrPreownedGamesPrices(req, res) {
   });
 }
 
-function getRate(callback) {
-  http.get(
-    `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
-      new Date()
-    )}`,
-    res => {
-      let data = '';
-      res.on('data', chunk => {
-        data += chunk;
-      });
-      res
-        .on('end', () => {
-          parseString(data, (err, res2) => {
-            let rate = parseFloat(
-              res2.ValCurs.Valute[2].Value[0].replace(',', '.')
-            );
-            callback(rate);
-          });
-        })
-        .on('error', err => {
-          throw err;
-        });
-    }
-  );
-}
+// getRate(rate => {
+//   return (exchangeRate = rate);
+// });
 
-getRate(rate => {
-  return (exchangeRate = rate);
-});
-
-setInterval(function getRate(rate) {
-  return (exchangeRate = rate);
-}, 86400000);
+// setInterval(function getRate(rate) {
+//   return (exchangeRate = rate);
+// }, 86400000);
 
 // const removeCh = id => id.replace('ch_', '');
 
@@ -202,12 +87,14 @@ app.use('/gcu/:id', (req, res) => {
 });
 
 app.post('/check', (req, res) => {
-  let requestedGames = req.body.cartInitial.map(el => ({
+  let requestedGames = req.body.cart.map(el => ({
     title: helpers.removeGbPlatform(el.title),
     id: el.id,
     price: el.price,
     priceForCash: el.priceForCash
   }));
+
+  console.log(requestedGames);
 
   let result = [];
 
