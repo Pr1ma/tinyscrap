@@ -95,6 +95,12 @@ function getVideoigrPlatform(input) {
   return result[0];
 }
 
+function getVideoigrLaguage(inputTitle) {
+  const containRus = /Русская/i;
+  //  const engRus = 'Русская/Engl.vers';
+  return containRus.test(inputTitle) === true ? 'rus' : 'eng';
+}
+
 const removeArrayDoublicates = (originalArray, prop) => {
   let newArray = [];
   let lookupObject = {};
@@ -119,3 +125,4 @@ module.exports.getVideoigrPlatform = getVideoigrPlatform;
 module.exports.removeGbPlatform = removeGbPlatform;
 module.exports.removeBrackets = removeBrackets;
 module.exports.removeArrayDoublicates = removeArrayDoublicates;
+module.exports.getVideoigrLaguage = getVideoigrLaguage;

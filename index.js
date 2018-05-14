@@ -47,8 +47,8 @@ function getVideoigrPreownedGamesPrices(req, res) {
               price: price,
               priceForCash: priceForCash,
               cover: 'undefined',
-              tags: [platform]
-              // language: 'undefined'
+              tags: [platform],
+              language: helpers.getVideoigrLaguage(title)
             });
           }
         );
