@@ -30,6 +30,11 @@ function removeGbPlatform(input) {
 
 // }
 
+function removeBrackets(input) {
+  const brackets = /\[|\]/g;
+  return input.replace(brackets, '');
+}
+
 function gcuPlatformTranslate(input) {
   if (typeof input !== 'string') return 'input must be a string';
   let output;
@@ -97,3 +102,4 @@ module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
 module.exports.getVideoigrPlatform = getVideoigrPlatform;
 // module.exports.getGcuEdition = getGcuEdition;
 module.exports.removeGbPlatform = removeGbPlatform;
+module.exports.removeBrackets = removeBrackets;

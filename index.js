@@ -41,7 +41,6 @@ function getVideoigrPreownedGamesPrices(req, res) {
               .find('input')
               .attr('price1');
             let platform = helpers.getVideoigrPlatform(title);
-            // let platform = title;
             result.push({
               id: id,
               title: title,
@@ -87,76 +86,93 @@ app.use('/gcu/:id', (req, res) => {
 });
 
 app.post('/check', async (req, res) => {
-  const requestedGames = req.body.cart.map(
+  const requestedGames = req.body.cart.map(el => ({
+    title: el.title,
+    id: el.id,
+    price: el.price,
+    priceForCash: el.priceForCash
+  }));
+
+  console.log('Requested', requestedGames);
+
+  let idsToSearch = req.body.cart.map(el => el.id);
+
+  let titlesToSearch = [];
+
+  let filter = new RegExp(idsToSearch.join('|'), 'g');
+  console.log('Filter is: ', filter);
+
+  function makeUniqueRequests(arr) {
+    let obj = {};
+    for (let i = 0; i < arr.length; i++) {
+      let str = helpers
+        .removeGbPlatform(arr[i].title)
+        .toLowerCase()
+        .replace(
+          new RegExp(
+            `(${[
+              '\\.',
+              '&',
+              'the',
+              '’',
+              // '\\\'s',
+              '\\\'',
+              ':',
+              '\\"',
+              'special',
+              'edition',
+              'limited',
+              'collectors',
+              'anniversary',
+              'complete',
+              'deluxe',
+              'game of the year edition',
+              'game',
+              'only',
+              '(Classics)',
+              '(Nintendo Selects)'
+            ].join(')|(')})`,
+            'gi'
+          ),
+          ''
+        )
+        .trim()
+        .split(' ', 2)
+        .join(' ');
+      obj[str] = true;
+    }
+    return (titlesToSearch = Object.keys(obj));
+  }
+  makeUniqueRequests(requestedGames);
+  console.log('ToSearch', titlesToSearch);
+
+  const gameRequest = titlesToSearch.map(
     el =>
       new Promise(resolve => {
-        const title = helpers
-          .removeGbPlatform(el.title)
-          .toLowerCase()
-          .replace(
-            new RegExp(
-              `(${[
-                '\\.',
-                '&',
-                'the',
-                '’',
-                // '\\\'s',
-                '\\\'',
-                ':',
-                '\\"',
-                'special',
-                'edition',
-                'limited',
-                'collectors',
-                'only'
-              ].join(')|(')})`,
-              'gi'
-            ),
-            ''
-          )
-          .trim()
-          .split(' ', 2)
-          .join(' ');
-
-        const id = el.id;
-
         setTimeout(() => {
-          getGcuGames(title, data => {
-            const result = data.filter(p => p.id === id)[0] || {
-              id,
-              price: null,
-              priceForCash: null,
-              title
+          getGcuGames(el, data => {
+            const result1 = data.filter(found => found.id.match(filter)) || {
+              ok: false,
+              message: 'что-то пошло не так'
             };
-            resolve(result);
+            // const result2 = [...result1];
+            console.log(`RESULT for ${el}`, result1);
+            resolve(result1);
           });
         }, Math.random() * 1000);
       })
   );
 
-  const resultProducts = await Promise.all(requestedGames);
+  const resultProducts = await Promise.all(gameRequest);
 
-  // let result = [];
+  const itogo = [].concat(...resultProducts);
 
-  // (() => {
-  //   for (let i = 0; i < requestedGames.length; i++) {
-  //     getGcuGames(requestedGames[i].title, data => {
-  //       //Какая-то проверка
-  //       if (data.length === 0)
-  //         result.push({ message: 'Не смогли оценить позицию' });
-  //       // console.log(data[0].price);
-  //       //проверка на соответствие цен
-  //       // if (
-  //       //   requestedGames.price === data[0].price &&
-  //       //   requestedGames.priceForCash === data[0].priceForCash
-  //       // )
-  //       // console.log('Цены РАВНЫ');
+  const wothoutDoubles = itogo => {};
 
-  //       result.push(data[0]);
-  //     });
-  //   }
-  // })();
-  // console.log('FINAL: ', result);
+  // console.log('FINAL', itogo);
+
+  // res.status(200).send(resultProducts);
+
   res.status(200).send(resultProducts);
 });
 
