@@ -93,14 +93,11 @@ app.post('/check', async (req, res) => {
     priceForCash: el.priceForCash
   }));
 
-  console.log('Requested', requestedGames);
-
   let idsToSearch = req.body.cart.map(el => el.id);
 
   let titlesToSearch = [];
 
   let filter = new RegExp(idsToSearch.join('|'), 'g');
-  console.log('Filter is: ', filter);
 
   function makeUniqueRequests(arr) {
     let obj = {};
@@ -144,7 +141,6 @@ app.post('/check', async (req, res) => {
     return (titlesToSearch = Object.keys(obj));
   }
   makeUniqueRequests(requestedGames);
-  console.log('ToSearch', titlesToSearch);
 
   const gameRequest = titlesToSearch.map(
     el =>
@@ -155,8 +151,6 @@ app.post('/check', async (req, res) => {
               ok: false,
               message: 'что-то пошло не так'
             };
-            // const result2 = [...result1];
-            console.log(`RESULT for ${el}`, result1);
             resolve(result1);
           });
         }, Math.random() * 1000);
@@ -165,15 +159,11 @@ app.post('/check', async (req, res) => {
 
   const resultProducts = await Promise.all(gameRequest);
 
-  const itogo = [].concat(...resultProducts);
+  const oneDimension = [].concat(...resultProducts);
 
-  const wothoutDoubles = itogo => {};
+  const final = helpers.removeArrayDoublicates(oneDimension, 'id');
 
-  // console.log('FINAL', itogo);
-
-  // res.status(200).send(resultProducts);
-
-  res.status(200).send(resultProducts);
+  res.status(200).send(final);
 });
 
 app.get('/gettags', (req, res) => {

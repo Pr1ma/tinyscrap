@@ -95,6 +95,21 @@ function getVideoigrPlatform(input) {
   return result[0];
 }
 
+const removeArrayDoublicates = (originalArray, prop) => {
+  let newArray = [];
+  let lookupObject = {};
+
+  for (let i in originalArray) {
+    lookupObject[originalArray[i][prop]] = originalArray[i];
+  }
+
+  for (let i in lookupObject) {
+    newArray.push(lookupObject[i]);
+  }
+
+  return newArray;
+};
+
 module.exports.tomorrow = tomorrow;
 module.exports.gcuPlatformTranslate = gcuPlatformTranslate;
 module.exports.gcuTitleNormalizer = gcuTitleNormalizer;
@@ -103,3 +118,4 @@ module.exports.getVideoigrPlatform = getVideoigrPlatform;
 // module.exports.getGcuEdition = getGcuEdition;
 module.exports.removeGbPlatform = removeGbPlatform;
 module.exports.removeBrackets = removeBrackets;
+module.exports.removeArrayDoublicates = removeArrayDoublicates;
