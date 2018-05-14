@@ -98,7 +98,9 @@ function getVideoigrPlatform(input) {
 function getVideoigrLaguage(inputTitle) {
   const containRus = /Русская/i;
   //  const engRus = 'Русская/Engl.vers';
-  return containRus.test(inputTitle) === true ? 'rus' : 'eng';
+  return containRus.test(inputTitle) === true
+    ? 'русский язык'
+    : 'английсий язык';
 }
 
 const removeArrayDoublicates = (originalArray, prop) => {

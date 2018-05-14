@@ -1,8 +1,8 @@
 const querystring = require('querystring');
-const stringToHash = require('../stringToHash');
+const stringToHash = require('../src/stringToHash');
 const cheerio = require('cheerio');
 const https = require('https');
-const helpers = require('../helpers');
+const helpers = require('../src/helpers');
 const exchangeRate = require('./exchangeRate');
 
 function getGcuGames(name, callback) {

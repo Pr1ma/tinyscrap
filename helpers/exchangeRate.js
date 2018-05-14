@@ -1,4 +1,4 @@
-const helpers = require('../helpers');
+const helpers = require('../src/helpers');
 const parseString = require('xml2js').parseString;
 const http = require('http');
 
