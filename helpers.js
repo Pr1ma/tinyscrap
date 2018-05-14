@@ -30,6 +30,11 @@ function removeGbPlatform(input) {
 
 // }
 
+function removeBrackets(input) {
+  const brackets = /\[|\]/g;
+  return input.replace(brackets, '');
+}
+
 function gcuPlatformTranslate(input) {
   if (typeof input !== 'string') return 'input must be a string';
   let output;
@@ -90,6 +95,27 @@ function getVideoigrPlatform(input) {
   return result[0];
 }
 
+function getVideoigrLaguage(inputTitle) {
+  const containRus = /Русская/i;
+  //  const engRus = 'Русская/Engl.vers';
+  return containRus.test(inputTitle) === true ? 'rus' : 'eng';
+}
+
+const removeArrayDoublicates = (originalArray, prop) => {
+  let newArray = [];
+  let lookupObject = {};
+
+  for (let i in originalArray) {
+    lookupObject[originalArray[i][prop]] = originalArray[i];
+  }
+
+  for (let i in lookupObject) {
+    newArray.push(lookupObject[i]);
+  }
+
+  return newArray;
+};
+
 module.exports.tomorrow = tomorrow;
 module.exports.gcuPlatformTranslate = gcuPlatformTranslate;
 module.exports.gcuTitleNormalizer = gcuTitleNormalizer;
@@ -97,4 +123,10 @@ module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
 module.exports.getVideoigrPlatform = getVideoigrPlatform;
 // module.exports.getGcuEdition = getGcuEdition;
 module.exports.removeGbPlatform = removeGbPlatform;
+<<<<<<< HEAD
 // module.exports.makeUniqTitlesToRequest = makeUniqTitlesToRequest;
+=======
+module.exports.removeBrackets = removeBrackets;
+module.exports.removeArrayDoublicates = removeArrayDoublicates;
+module.exports.getVideoigrLaguage = getVideoigrLaguage;
+>>>>>>> master

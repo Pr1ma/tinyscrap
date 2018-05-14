@@ -2,18 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cheerio = require('cheerio');
-const http = require('http');
-const querystring = require('querystring');
 const https = require('https');
-const parseString = require('xml2js').parseString;
 const iconv = require('iconv-lite');
-const stringToHash = require('./stringToHash');
 const helpers = require('./helpers');
 // const fs = require('fs');
 const bodyParser = require('body-parser');
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 8080;
 
+<<<<<<< HEAD
 let exchangeRate;
 
 const getGcuGames2 = function(name, callback) {
@@ -193,6 +190,9 @@ function getGcuGames(name, callback) {
   request.write(postData);
   request.end();
 }
+=======
+const getGcuGames = require('./helpers/gameCoUk').getGcuGames;
+>>>>>>> master
 
 function getVideoigrPreownedGamesPrices(req, res) {
   https.get('https://videoigr.net/msc_trade_in.php', response => {
@@ -223,15 +223,14 @@ function getVideoigrPreownedGamesPrices(req, res) {
               .find('input')
               .attr('price1');
             let platform = helpers.getVideoigrPlatform(title);
-            // let platform = title;
             result.push({
               id: id,
               title: title,
               price: price,
               priceForCash: priceForCash,
               cover: 'undefined',
-              tags: [platform]
-              // language: 'undefined'
+              tags: [platform],
+              language: helpers.getVideoigrLaguage(title)
             });
           }
         );
@@ -244,6 +243,7 @@ function getVideoigrPreownedGamesPrices(req, res) {
   });
 }
 
+<<<<<<< HEAD
 function getExchangeRate(callback) {
   http.get(
     `http://www.cbr.ru/scripts/XML_daily.asp?date_req=${helpers.tomorrow(
@@ -277,6 +277,15 @@ getExchangeRate(rate => {
 setInterval(function getExchangeRate(rate) {
   return (exchangeRate = rate);
 }, 86400000);
+=======
+// getRate(rate => {
+//   return (exchangeRate = rate);
+// });
+
+// setInterval(function getRate(rate) {
+//   return (exchangeRate = rate);
+// }, 86400000);
+>>>>>>> master
 
 // const removeCh = id => id.replace('ch_', '');
 
@@ -294,16 +303,22 @@ app.use('/gcu/:id', (req, res) => {
   });
 });
 
+<<<<<<< HEAD
 app.post('/check', (req, res) => {
   let result = [];
 
   const requestedGames = req.body.cartInitial.map(el => ({
+=======
+app.post('/check', async (req, res) => {
+  const requestedGames = req.body.cart.map(el => ({
+>>>>>>> master
     title: el.title,
     id: el.id,
     price: el.price,
     priceForCash: el.priceForCash
   }));
 
+<<<<<<< HEAD
   let toSearch = [];
 
   function un(arr) {
@@ -332,6 +347,79 @@ app.post('/check', (req, res) => {
   //Надо решить проблему с асинхронностью
   console.log('FINAL: ', result);
   res.status(200).send(result);
+=======
+  let idsToSearch = req.body.cart.map(el => el.id);
+
+  let titlesToSearch = [];
+
+  let filter = new RegExp(idsToSearch.join('|'), 'g');
+
+  function makeUniqueRequests(arr) {
+    let obj = {};
+    for (let i = 0; i < arr.length; i++) {
+      let str = helpers
+        .removeGbPlatform(arr[i].title)
+        .toLowerCase()
+        .replace(
+          new RegExp(
+            `(${[
+              '\\.',
+              '&',
+              'the',
+              '’',
+              // '\\\'s',
+              '\\\'',
+              ':',
+              '\\"',
+              'special',
+              'edition',
+              'limited',
+              'collectors',
+              'anniversary',
+              'complete',
+              'deluxe',
+              'game of the year edition',
+              'game',
+              'only',
+              '(Classics)',
+              '(Nintendo Selects)'
+            ].join(')|(')})`,
+            'gi'
+          ),
+          ''
+        )
+        .trim()
+        .split(' ', 2)
+        .join(' ');
+      obj[str] = true;
+    }
+    return (titlesToSearch = Object.keys(obj));
+  }
+  makeUniqueRequests(requestedGames);
+
+  const gameRequest = titlesToSearch.map(
+    el =>
+      new Promise(resolve => {
+        setTimeout(() => {
+          getGcuGames(el, data => {
+            const result1 = data.filter(found => found.id.match(filter)) || {
+              ok: false,
+              message: 'что-то пошло не так'
+            };
+            resolve(result1);
+          });
+        }, Math.random() * 1000);
+      })
+  );
+
+  const resultProducts = await Promise.all(gameRequest);
+
+  const oneDimension = [].concat(...resultProducts);
+
+  const final = helpers.removeArrayDoublicates(oneDimension, 'id');
+
+  res.status(200).send(final);
+>>>>>>> master
 });
 
 app.get('/gettags', (req, res) => {
