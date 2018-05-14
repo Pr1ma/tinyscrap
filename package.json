@@ -42,7 +42,13 @@
     "url": "https://github.com/Pr1ma/tinyscrap/issues"
   },
   "nodemonConfig": {
-    "ignore": ["test/*", "docs/*", "node_modules/*", "dist/*", ".vscode/*"],
+    "ignore": [
+      "test/*",
+      "docs/*",
+      "node_modules/*",
+      "dist/*",
+      ".vscode/*"
+    ],
     "delay": "2500"
   }
 }
