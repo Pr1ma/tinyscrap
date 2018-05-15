@@ -5,8 +5,14 @@ node_js:
 branches:
   only:
     - master
+before_install:
+  - npm i -g npm@6.0.1
+cache:
+  directories:
+    - "node_modules"
 script:
   - npm run lint
+  - npm run prod
 deploy:
   provider: heroku
   app: "tinyscrap"

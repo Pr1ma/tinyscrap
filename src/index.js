@@ -59,6 +59,7 @@ app.post('/check', async (req, res) => {
               'limited',
               'collectors',
               'anniversary',
+              'extended',
               'complete',
               'deluxe',
               'game of the year edition',

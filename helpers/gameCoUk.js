@@ -48,12 +48,18 @@ function getGcuGames(name, callback) {
           .find('div.prod-title')
           .text();
         let id = stringToHash.unique(title + ' ' + platform);
-        let price = $(el)
-          .find('span.credit-price-field')
-          .text();
-        let priceForCash = $(el)
-          .find('span.price-field')
-          .text();
+        let price = helpers.fromGbpToRubPrice(
+          $(el)
+            .find('span.credit-price-field')
+            .text(),
+          exchangeRate.value
+        );
+        let priceForCash = helpers.fromGbpToRubPrice(
+          $(el)
+            .find('span.price-field')
+            .text(),
+          exchangeRate.value
+        );
         let cover = $(el)
           .find('div.col-xs-6.col-md-4')
           .children()
@@ -63,11 +69,8 @@ function getGcuGames(name, callback) {
         result.push({
           id: id,
           title: helpers.gcuTitleNormalizer(title) + ' ' + platform,
-          price: helpers.fromGbpToRubPrice(price, exchangeRate.value),
-          priceForCash: helpers.fromGbpToRubPrice(
-            priceForCash,
-            exchangeRate.value
-          ),
+          price: price === 0 ? 20 : price,
+          priceForCash: priceForCash === 0 ? 20 : priceForCash,
           cover:
             cover.search(
               /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
