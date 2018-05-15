@@ -1,6 +1,6 @@
 {
   "name": "tinyscrap",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Homeless scrapping server",
   "private": true,
   "dependencies": {
@@ -25,9 +25,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon './src/index.js'",
-    "build": "webpack --mode=production",
-    "prod": "node ./src/index.js NODE_ENV=production"
+    "dev": "nodemon './src/index.js'"
   },
   "engines": {
     "node": ">=9.11.1"
