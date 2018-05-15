@@ -64,6 +64,28 @@ const gcuPlatformTranslate = input => {
   return output;
 };
 
+const viPlatformTranslate = input => {
+  if (typeof input !== 'string') return 'input must be a string';
+  let output;
+  switch (input) {
+  case 'Nintendo Switch':
+    output = 'NSwitch';
+    break;
+  case 'PS Vita':
+    output = 'PS Vita';
+    break;
+  case 'Nintendo 3DS':
+    output = '3DS';
+    break;
+  case 'Nintendo Wii U':
+    output = 'Wii U';
+    break;
+  default:
+    output = input;
+  }
+  return output;
+};
+
 //Вероятно search() здесь избыточен
 const gcuTitleNormalizer = title =>
   title.search(/ - Only at GAME/) !== -1
@@ -81,7 +103,7 @@ const getVideoigrPlatform = input => {
   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
   const result = platforms.exec(input);
   if (result === null) return;
-  return result[0];
+  return viPlatformTranslate(result[0]);
 };
 
 const viEngPattern = /\(Eng\)|Engl|\[US\]|\[USA\]|\[English ver.\]/;
