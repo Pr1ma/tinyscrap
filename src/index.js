@@ -15,7 +15,7 @@ app.use(helmet());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use('/images', express.static(__dirname + '/images'));
+app.use('/images', express.static(__dirname + './../images'));
 
 app.use('/gcu/:id', (req, res) => {
   getGcuGames(req.params.id, data => {

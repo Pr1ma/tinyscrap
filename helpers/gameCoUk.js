@@ -78,7 +78,7 @@ function getGcuGames(name, callback) {
               ? cover
               : 'https://tinyscrap.herokuapp.com/images/no_photo.svg',
           tags: [helpers.removeBrackets(platform)],
-          language: 'undefined'
+          language: undefined
         });
       });
       callback(result);

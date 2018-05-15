@@ -12,7 +12,7 @@ const tomorrow = date => {
 };
 
 const gamebuyPlatformsPattern = /(\[X360\])|(\[Xbox One\])|(\[Wii U\])|(\[Wii\])|(\[NSwitch\])|(\[3DS\])|(\[NDS\])|(\[PS3\])|(\[PS4\])/;
-const viPlatformPattern = /(PS3)|(PS3 Move)|(PS3 MOVE)|(Nintendo Wii U)|(Nintendo 3DS)|(3DS)|(New Nintendo 3DS)|(Ps Vita)|(Xbox One)|(PS4)|(PSVR)|(PS4\/PSVR)|(Nintendo Switch)/;
+const viPlatformPattern = /(PS(\s3|3))|(PS3 Move)|(PS3 MOVE)|(Nintendo Wii U)|(Nintendo 3DS)|(3DS)|(New Nintendo 3DS)|(Ps Vita)|(Xbox One)|(PS4|\/|PSVR)|(Nintendo Switch)/;
 
 const removeGbPlatform = input =>
   input.replace(gamebuyPlatformsPattern, '').trim();
@@ -71,14 +71,14 @@ const viPlatformTranslate = input => {
   case 'Nintendo Switch':
     output = 'NSwitch';
     break;
-  case 'PS Vita':
-    output = 'PS Vita';
-    break;
   case 'Nintendo 3DS':
     output = '3DS';
     break;
   case 'Nintendo Wii U':
     output = 'Wii U';
+    break;
+  case 'PS 3':
+    output = 'PS3';
     break;
   default:
     output = input;
@@ -87,10 +87,10 @@ const viPlatformTranslate = input => {
 };
 
 //Вероятно search() здесь избыточен
-const gcuTitleNormalizer = title =>
-  title.search(/ - Only at GAME/) !== -1
-    ? title.replace(' - Only at GAME', '')
-    : title;
+const gcuTitleNormalizer = title => {
+  const str = /( - Only at GAME)|(.co.uk)/;
+  return title.search(str) !== -1 ? title.replace(str, '') : title;
+};
 
 const fromGbpToRubPrice = (price, exchangeRate) => {
   const result = Math.round(price.replace('£', '') * exchangeRate / 50) * 50;
@@ -100,32 +100,38 @@ const fromGbpToRubPrice = (price, exchangeRate) => {
 //сделать trim + tolowercase + переименовать
 //сделать массив платформ
 const getVideoigrPlatform = input => {
-  const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
+  const platforms = /(PS(\s3|3))|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
   const result = platforms.exec(input);
   if (result === null) return;
   return viPlatformTranslate(result[0]);
 };
 
-const viEngPattern = /\(Eng\)|Engl|\[US\]|\[USA\]|\[English ver.\]/;
-const viRusPattern = /\(Русская версия\)|\[Русская\/Engl.vers.\]/;
-const viOrigPattern = /\[AS\]|\[ASIA\]|\[Asia\/English\]/;
+const viEngPattern = /(\(Eng\))|(Engl)|(\[US\])|(\[USA\])|(\[English ver.\])/;
+const viRusPattern = /(\(Русская (в|В)ерсия\))|(\[Русская\/Engl.vers(.|)\])/;
+const viOrigPattern = /(\[AS\])|(\[ASIA\])|(\[Asia\/English\])/;
 //при удалении языка из тайтла использовать до того как будут убраны brackets
 const videoigrLaguage = (inputTitle, remove) => {
   if (remove) {
     //В этом чайне рус должен стоять в начале
-    return inputTitle
-      .replace(viRusPattern, '')
-      .replace(viEngPattern, '')
-      .replace(viOrigPattern, '');
+    return inputTitle.replace(
+      new RegExp(
+        viRusPattern.source +
+          '|' +
+          viEngPattern.source +
+          '|' +
+          viOrigPattern.source
+      ),
+      ''
+    );
+  } else {
+    return inputTitle.search(viRusPattern) > -1
+      ? 'русский язык'
+      : inputTitle.search(viEngPattern) > -1
+        ? 'английский язык'
+        : inputTitle.search(viOrigPattern) > -1
+          ? 'язык оригинала'
+          : 'английский язык';
   }
-
-  return inputTitle.search(viRusPattern) > -1
-    ? 'русский язык'
-    : inputTitle.search(viEngPattern) > -1
-      ? 'английский язык'
-      : inputTitle.search(viOrigPattern) > -1
-        ? 'язык оригинала'
-        : 'английский язык';
 };
 
 const removeArrayDoublicates = (originalArray, prop) => {
