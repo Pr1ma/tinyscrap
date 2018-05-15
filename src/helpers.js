@@ -11,15 +11,6 @@ const tomorrow = date => {
   return dd + '/' + mm + '/' + yyyy;
 };
 
-//сделать trim + tolowercase + переименовать
-//сделать массив платформ
-// function getGcuEdition(input) {
-//   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
-//   const result = platforms.exec(input);
-//   if (result === null) return;
-//   return result[0];
-// }
-
 const gamebuyPlatformsPattern = /(\[X360\])|(\[Xbox One\])|(\[Wii U\])|(\[Wii\])|(\[NSwitch\])|(\[3DS\])|(\[NDS\])|(\[PS3\])|(\[PS4\])/;
 const viPlatformPattern = /(PS3)|(PS3 Move)|(PS3 MOVE)|(Nintendo Wii U)|(Nintendo 3DS)|(3DS)|(New Nintendo 3DS)|(Ps Vita)|(Xbox One)|(PS4)|(PSVR)|(PS4\/PSVR)|(Nintendo Switch)/;
 
@@ -28,16 +19,12 @@ const removeGbPlatform = input =>
 
 const removeViPlatform = input => input.replace(viPlatformPattern, '').trim();
 
-// function removeGameEdition(input) {
-
-// }
-
-function removeBrackets(input) {
+const removeBrackets = input => {
   const brackets = /\[|\]|\(|\)/g;
   return input.replace(brackets, '');
-}
+};
 
-function gcuPlatformTranslate(input) {
+const gcuPlatformTranslate = input => {
   if (typeof input !== 'string') return 'input must be a string';
   let output;
   switch (input) {
@@ -75,7 +62,7 @@ function gcuPlatformTranslate(input) {
     output = input;
   }
   return output;
-}
+};
 
 //Вероятно search() здесь избыточен
 const gcuTitleNormalizer = title =>
@@ -90,20 +77,34 @@ const fromGbpToRubPrice = (price, exchangeRate) => {
 
 //сделать trim + tolowercase + переименовать
 //сделать массив платформ
-function getVideoigrPlatform(input) {
+const getVideoigrPlatform = input => {
   const platforms = /(PS3)|(Nintendo Wii U)|(Nintendo 3DS)|(PS Vita)|(Xbox One)|(PS4)|(Nintendo Switch)/;
   const result = platforms.exec(input);
   if (result === null) return;
   return result[0];
-}
+};
 
-function getVideoigrLaguage(inputTitle) {
-  const containRus = /Русская/i;
-  //  const engRus = 'Русская/Engl.vers';
-  return containRus.test(inputTitle) === true
+const viEngPattern = /\(Eng\)|Engl|\[US\]|\[USA\]|\[English ver.\]/;
+const viRusPattern = /\(Русская версия\)|\[Русская\/Engl.vers.\]/;
+const viOrigPattern = /\[AS\]|\[ASIA\]|\[Asia\/English\]/;
+//при удалении языка из тайтла использовать до того как будут убраны brackets
+const videoigrLaguage = (inputTitle, remove) => {
+  if (remove) {
+    //В этом чайне рус должен стоять в начале
+    return inputTitle
+      .replace(viRusPattern, '')
+      .replace(viEngPattern, '')
+      .replace(viOrigPattern, '');
+  }
+
+  return inputTitle.search(viRusPattern) > -1
     ? 'русский язык'
-    : 'английсий язык';
-}
+    : inputTitle.search(viEngPattern) > -1
+      ? 'английский язык'
+      : inputTitle.search(viOrigPattern) > -1
+        ? 'язык оригинала'
+        : 'английский язык';
+};
 
 const removeArrayDoublicates = (originalArray, prop) => {
   let newArray = [];
@@ -130,4 +131,4 @@ module.exports.removeGbPlatform = removeGbPlatform;
 module.exports.removeViPlatform = removeViPlatform;
 module.exports.removeBrackets = removeBrackets;
 module.exports.removeArrayDoublicates = removeArrayDoublicates;
-module.exports.getVideoigrLaguage = getVideoigrLaguage;
+module.exports.videoigrLaguage = videoigrLaguage;

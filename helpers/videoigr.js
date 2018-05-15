@@ -42,13 +42,15 @@ function getVideoigrUsed(req, res) {
               result.push({
                 id: id.toString().replace('ch_', 'vinet_'),
                 title: helpers
-                  .removeBrackets(helpers.removeViPlatform(title))
+                  .removeBrackets(
+                    helpers.removeViPlatform(helpers.videoigrLaguage(title, 1))
+                  )
                   .trim(),
                 price: price,
                 priceForCash: priceForCash,
                 cover: 'undefined',
                 tags: [platform],
-                language: helpers.getVideoigrLaguage(title)
+                language: helpers.videoigrLaguage(title)
               });
             }
           }
