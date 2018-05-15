@@ -21,17 +21,19 @@ const tomorrow = date => {
 // }
 
 const gamebuyPlatformsPattern = /(\[X360\])|(\[Xbox One\])|(\[Wii U\])|(\[Wii\])|(\[NSwitch\])|(\[3DS\])|(\[NDS\])|(\[PS3\])|(\[PS4\])/;
+const viPlatformPattern = /(PS3)|(PS3 Move)|(PS3 MOVE)|(Nintendo Wii U)|(Nintendo 3DS)|(3DS)|(New Nintendo 3DS)|(Ps Vita)|(Xbox One)|(PS4)|(PSVR)|(PS4\/PSVR)|(Nintendo Switch)/;
 
-function removeGbPlatform(input) {
-  return input.replace(gamebuyPlatformsPattern, '').trim();
-}
+const removeGbPlatform = input =>
+  input.replace(gamebuyPlatformsPattern, '').trim();
+
+const removeViPlatform = input => input.replace(viPlatformPattern, '').trim();
 
 // function removeGameEdition(input) {
 
 // }
 
 function removeBrackets(input) {
-  const brackets = /\[|\]/g;
+  const brackets = /\[|\]|\(|\)/g;
   return input.replace(brackets, '');
 }
 
@@ -125,6 +127,7 @@ module.exports.fromGbpToRubPrice = fromGbpToRubPrice;
 module.exports.getVideoigrPlatform = getVideoigrPlatform;
 // module.exports.getGcuEdition = getGcuEdition;
 module.exports.removeGbPlatform = removeGbPlatform;
+module.exports.removeViPlatform = removeViPlatform;
 module.exports.removeBrackets = removeBrackets;
 module.exports.removeArrayDoublicates = removeArrayDoublicates;
 module.exports.getVideoigrLaguage = getVideoigrLaguage;

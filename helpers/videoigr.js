@@ -31,19 +31,28 @@ function getVideoigrUsed(req, res) {
             let priceForCash = $(el)
               .find('input')
               .attr('price1');
-            let platform = helpers.getVideoigrPlatform(title);
-            result.push({
-              id: id,
-              title: title,
-              price: price,
-              priceForCash: priceForCash,
-              cover: 'undefined',
-              tags: [platform],
-              language: helpers.getVideoigrLaguage(title)
-            });
+            let platform = helpers.getVideoigrPlatform(
+              $(el)
+                .find('td')
+                .eq(1)
+                .text()
+            );
+
+            if (id) {
+              result.push({
+                id: id.toString().replace('ch_', 'vinet_'),
+                title: helpers
+                  .removeBrackets(helpers.removeViPlatform(title))
+                  .trim(),
+                price: price,
+                priceForCash: priceForCash,
+                cover: 'undefined',
+                tags: [platform],
+                language: helpers.getVideoigrLaguage(title)
+              });
+            }
           }
         );
-
         res.json(result);
       })
       .on('error', err => {
