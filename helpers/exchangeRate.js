@@ -1,6 +1,7 @@
 const helpers = require('../src/helpers');
 const parseString = require('xml2js').parseString;
 const http = require('http');
+// const cache = require('memory-cache');
 
 // из-за require приходится городить объект
 const exchangeRate = { value: 100 };
@@ -25,6 +26,8 @@ function getRate(callback) {
           });
         })
         .on('error', err => {
+          /* eslint-disable-next-line no-console */
+          console.log('getRate Error', err.message);
           throw err;
         });
     }
