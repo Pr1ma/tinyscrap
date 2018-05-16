@@ -48,7 +48,7 @@ function getVideoigrUsed(req, res) {
                   .trim(),
                 price: price,
                 priceForCash: priceForCash,
-                cover: 'undefined',
+                cover: 'https://tinyscrap.gamebuy.ru/images/no_photo.svg',
                 tags: [platform],
                 language: helpers.videoigrLaguage(title)
               });
