@@ -81,7 +81,8 @@ function getGcuGames(name, callback) {
           language: undefined
         });
       });
-      callback(result);
+      const filtered = helpers.removeArrayDoublicates(result, 'id');
+      callback(filtered);
     });
   });
 
