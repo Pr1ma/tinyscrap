@@ -37,20 +37,25 @@ function getVideoigrUsed(req, res) {
                 .eq(1)
                 .text()
             );
-            // let platformImage = platform
-            //   .toString()
-            //   .toLowerCase.replace(' ', '');
+
             if (id) {
+              let platformImage =
+                (platform &&
+                  `https://tinyscrap.gamebuy.ru/images/${platform
+                    .toString()
+                    .replace(' ', '')}.svg`) ||
+                '';
+
               result.push({
-                id: id.toString().replace('ch_', 'vinet_'),
-                title: helpers
+                id: 'vinet_' + id.toString().replace('ch_', ''),
+                title: `${helpers
                   .removeViPlatform(
                     helpers.removeBrackets(helpers.videoigrLaguage(title, 1))
                   )
-                  .trim(),
+                  .trim()} [${platform}]`,
                 price: price,
                 priceForCash: priceForCash,
-                cover: `https://tinyscrap.gamebuy.ru/images/${platform}.svg`,
+                cover: platformImage,
                 tags: [platform],
                 language: helpers.videoigrLaguage(title)
               });
