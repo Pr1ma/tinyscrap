@@ -37,7 +37,9 @@ function getVideoigrUsed(req, res) {
                 .eq(1)
                 .text()
             );
-
+            // let platformImage = platform
+            //   .toString()
+            //   .toLowerCase.replace(' ', '');
             if (id) {
               result.push({
                 id: id.toString().replace('ch_', 'vinet_'),
@@ -48,7 +50,7 @@ function getVideoigrUsed(req, res) {
                   .trim(),
                 price: price,
                 priceForCash: priceForCash,
-                cover: 'https://tinyscrap.gamebuy.ru/images/no_photo.svg',
+                cover: `https://tinyscrap.gamebuy.ru/images/${platform}.svg`,
                 tags: [platform],
                 language: helpers.videoigrLaguage(title)
               });

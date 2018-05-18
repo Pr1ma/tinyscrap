@@ -76,7 +76,9 @@ function getGcuGames(name, callback) {
               /img\.game\.co\.uk\/assets\/img\/_tradein-img\/icon_grey\.jpg/
             ) === -1
               ? cover
-              : 'https://tinyscrap.gamebuy.ru/images/no_photo.svg',
+              : `https://tinyscrap.gamebuy.ru/images/${helpers.removeBrackets(
+                platform
+              )}.svg`,
           tags: [helpers.removeBrackets(platform)],
           language: undefined
         });
