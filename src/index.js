@@ -30,13 +30,16 @@ app.post('/check', async (req, res) => {
     price: el.price,
     priceForCash: el.priceForCash
   }));
-
+  //Разбираем пришедший запрос по элементам
   let idsToSearch = req.body.cart.map(el => el.id);
 
+  //Сюда попадут только уникальные тайтлы для фетча
   let titlesToSearch = [];
 
+  //Создаём регэксп по которому будем фильтровать тайтлы
   let filter = new RegExp(idsToSearch.join('|'), 'g');
 
+  //Функция добавляет в массив только уникальные тайтлы
   function makeUniqueRequests(arr) {
     let obj = {};
     for (let i = 0; i < arr.length; i++) {
@@ -81,25 +84,27 @@ app.post('/check', async (req, res) => {
   }
   makeUniqueRequests(requestedGames);
 
+  //Промис-запрос на game.co.uk
   const gameRequest = titlesToSearch.map(
     el =>
       new Promise(resolve => {
         setTimeout(() => {
           getGcuGames(el, data => {
-            const result1 = data.filter(found => found.id.match(filter)) || {
-              ok: false,
-              message: 'что-то пошло не так'
-            };
+            //здесь я забыл что происходит =)
+            const result1 = data.filter(found => found.id.match(filter));
             resolve(result1);
           });
         }, Math.random() * 1000);
       })
   );
 
+  //резолвим промисы
   const resultProducts = await Promise.all(gameRequest);
 
+  //преобразуем данные в одномерный массив
   const oneDimension = [].concat(...resultProducts);
 
+  //удаляем из результатов дубликаты (наверное можно будет убрать, надо снова потестить)
   const final = helpers.removeArrayDoublicates(oneDimension, 'id');
 
   res.status(200).send(final);

@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const https = require('https');
 const helpers = require('../src/helpers');
 const exchangeRate = require('./exchangeRate');
+const gamecoukIdBlacklist = require('../gameblacklist/gamecoukIdBlacklist');
 
 function getGcuGames(name, callback) {
   let postData = querystring.stringify({
@@ -15,7 +16,7 @@ function getGcuGames(name, callback) {
     MinimumBasketValue: 5
   });
   /* eslint-disable-next-line no-console */
-  console.log('Incoming name: ', name);
+  // console.log('Incoming name: ', name);
   let options = {
     hostname: 'tradein.game.co.uk',
     port: 443,
@@ -84,7 +85,10 @@ function getGcuGames(name, callback) {
         });
       });
       const filtered = helpers.removeArrayDoublicates(result, 'id');
-      callback(filtered);
+      const filteredByBlacklist = filtered.filter(
+        el => !gamecoukIdBlacklist.includes(el.id)
+      );
+      callback(filteredByBlacklist);
     });
   });
 
