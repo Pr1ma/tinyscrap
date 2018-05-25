@@ -60,6 +60,7 @@ app.post('/check', async (req, res) => {
               'special',
               'edition',
               'limited',
+              'selects',
               'collectors',
               'anniversary',
               'extended',
