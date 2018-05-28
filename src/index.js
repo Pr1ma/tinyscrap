@@ -54,7 +54,7 @@ app.post('/check', async (req, res) => {
               'the',
               '’',
               // '\\\'s',
-              '\\\'',
+              // '\\\'',
               ':',
               '\\"',
               'special',
@@ -92,6 +92,7 @@ app.post('/check', async (req, res) => {
         setTimeout(() => {
           getGcuGames(el, data => {
             //здесь я забыл что происходит =)
+            // console.log(el, filter);
             const result1 = data.filter(found => found.id.match(filter));
             resolve(result1);
           });
